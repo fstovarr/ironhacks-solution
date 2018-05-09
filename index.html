@@ -6,23 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="css/style.css">
-  <title> Live in New York! </title>
+  <title> Be Safe! </title>
 </head>
 
 <body>
+  <div class="container" id="navbarContainer">
+    <nav class="navbar fixed-bottom navbar-expand-lg navbar-light bd-light justify-content-center" id="floatingNavbar">
+      <a class="navbar-brand">Be safe!</a>
+
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="#" id="switchModeButton" data-toggle="tab">Turn on!</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="drawHousingsButton">Draw Housings</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="centerMapButton">Center map</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="drawDistrictsButton">Draw districts</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="drawNeighborhoodsButton">Draw neighborhoods</a></li>
+          <li class="nav-item">
+        </ul>
+      </div>
+    </nav>
+  </div>
 
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-md-11">
-        <div id="mapContainer" class="mh-100">
+    <div class="row" id="divMap">
+      <div class="col-md-12">
+        <div id="mapContainer">
         </div>
-      </div>
-      <div class="col-md-1">
-        <button id="switchModeButton" disabled="true">Switch mode</button>
-        <button id="drawHousingsButton">Draw Housings</button>
-        <button id="centerMapButton">Center map</button>
-        <button id="drawDistrictsButton">Draw districts</button>
-        <button id="drawNeighborhoodsButton">Draw neighborhoods</button>
       </div>
     </div>
   </div>
