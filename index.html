@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <title> Live in New York! </title>
+</head>
+
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-11">
+        <div id="mapContainer" class="mh-100">
+        </div>
+      </div>
+      <div class="col-md-1">
+        <button id="switchModeButton" disabled="true">Switch mode</button>
+        <button id="drawHousingsButton">Draw Housings</button>
+        <button id="centerMapButton">Center map</button>
+        <button id="drawDistrictsButton">Draw districts</button>
+        <button id="drawNeighborhoodsButton">Draw neighborhoods</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
+  <script type="text/javascript" src="js/map.js"></script>
+  <script type="text/javascript" src="js/data.js"></script>
+  <script type="text/javascript" src="js/utils.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQAYhQ8B-z33wEZBDAYSPWJ33o_e5rIqg&callback=initMap"></script>
+</body>
+
+</html>
