@@ -1,4 +1,7 @@
 // Created with https://mapstyle.withgoogle.com/
+var addedMarkers = [],
+  addedShapes = [];
+
 function GoogleMap(init_point) {
   this.init_point = init_point;
   this.nightMode = false;
@@ -399,17 +402,21 @@ GoogleMap.prototype.showMap = function() {
   this.map.mapTypes.set('night_style', this.nightStyleMap);
   this.map.mapTypes.set('default_style', this.defaultStyleMap);
 
-  this.map.setMapTypeId('default_style');
+  this.map.setMapTypeId('night_style');
 }
 
 GoogleMap.prototype.changeToNightMode = function() {
-  if (this.nightMode == false) {
-    this.nightMode = true;
+  if (this.nightMode == true) {
+    this.nightMode = false;
     this.map.setMapTypeId('night_style');
   } else {
-    this.nightMode = false;
+    this.nightMode = true;
     this.map.setMapTypeId('default_style');
   }
+}
+
+GoogleMap.prototype.isNightMode = function() {
+  return this.nightMode;
 }
 
 GoogleMap.prototype.drawHousings = function(data) {
@@ -425,9 +432,9 @@ GoogleMap.prototype.drawHousings = function(data) {
         position: point,
         map: this.map
       });
-
+      addedMarkers.push(marker);
     } else {
-      console.log("null");
+      //console.log("null");
     }
   }
 }
@@ -438,14 +445,15 @@ GoogleMap.prototype.drawDistricts = function(data) {
     let color = new Utils().getRandomColor();
 
     for (let j = 0; j < coordinates.length; j++) {
-
       let fCoordinates;
       if (coordinates.length > 1) {
         fCoordinates = formatCoordinates(coordinates[j][0]);
       } else {
         fCoordinates = formatCoordinates(coordinates[j]);
       }
-      drawPolygon(fCoordinates, color).setMap(this.map);
+      let polygon = drawPolygon(fCoordinates, color);
+      polygon.setMap(this.map);
+      addedShapes.push(polygon);
     }
   }
 }
@@ -466,6 +474,7 @@ GoogleMap.prototype.drawNeighborhood = function(data) {
       position: coordinates[i],
       map: this.map
     });
+    addedMarkers.push(marker);
   }
   return coordinates;
 }
@@ -502,4 +511,17 @@ GoogleMap.prototype.centerMap = function(coordinates) {
     mmap.setZoom(17);
     mmap = null;
   })
+}
+
+function clearElementsInMap(elements) {
+  for (let v of elements) {
+    v.setMap(null);
+  }
+}
+
+GoogleMap.prototype.clearMarkers = function() {
+  clearElementsInMap(addedMarkers);
+}
+GoogleMap.prototype.clearShapes = function() {
+  clearElementsInMap(addedShapes);
 }

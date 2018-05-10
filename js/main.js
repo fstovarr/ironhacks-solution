@@ -1,11 +1,12 @@
+// Principal palette #646E74, #262D31, #D4D5D8, #A3A7AD, #448F9C
+var lightsButton, housingsButton, districtsButton, neighborhoodButton, clearMarkersButton;
 $(document).ready(function() {
-  var windowHeight = $(window).height();
-  $('#mapContainer').height(windowHeight);
-  $('#switchMode').on('click', switchMode);
-  $('#drawHousingsButton').on('click', drawHousings);
+  lightsButton = $('#switchModeButton').on('click', switchMode);
+  housingsButton = $('#drawHousingsButton').on('click', drawHousings);
   $('#centerMapButton').on('click', centerMap);
-  $('#drawDistrictsButton').on('click', drawDistricts);
-  $('#drawNeighborhoodsButton').on('click', drawNeighborhood);
+  districtsButton = $('#drawDistrictsButton').on('click', drawDistricts);
+  neighborhoodButton = $('#drawNeighborhoodsButton').on('click', drawNeighborhood);
+  clearMarkersButton = $('#clearMarkersButton').on('click', clearMarkers);
   getData();
 });
 
@@ -23,6 +24,11 @@ function initMap() {
 
 function switchMode() {
   googleMap.changeToNightMode();
+  if (googleMap.isNightMode()) {
+    lightsButton.html('Turn off!');
+  } else {
+    lightsButton.html('Turn on!');
+  }
 }
 
 function drawHousings() {
@@ -45,4 +51,9 @@ function drawDistricts() {
 
 function drawNeighborhood() {
   googleMap.drawNeighborhood(data['neighborhood']);
+}
+
+function clearMarkers() {
+  googleMap.clearMarkers();
+  googleMap.clearShapes();
 }

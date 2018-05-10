@@ -37,7 +37,6 @@ function DataManager() {
 }
 
 DataManager.prototype.getDataFromURLS = function() {
-  console.log(this.result['crimes']);
   return this.result;
 }
 
