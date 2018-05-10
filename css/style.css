@@ -1,16 +1,6 @@
 body, html {
   background-color: #646D73 !important;
-}
-
-body, html, #divConMap, #divColMap, #divMap, #mapContainer {
-  height: 100% !important;
-  width: 100% !important;
-  margin: 0;
-  padding: 0;
-}
-
-#divConMap, #divColMap, #divMap,#mapContainer {
-  position: relative !important;
+  height: 100%;
 }
 
 .body, .container, .col-md-12, .row, .container-fluid {

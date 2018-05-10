@@ -20,6 +20,10 @@ var googleMap, dataManager, idsDataBases, data;
 function initMap() {
   googleMap = new GoogleMap(INIT_POINT);
   googleMap.showMap();
+  googleMap.distanceBeetwen({
+    lat: 49,
+    lng: -73
+  }, INIT_POINT, 'DRIVING');
 }
 
 function switchMode() {

@@ -2,9 +2,13 @@
 var addedMarkers = [],
   addedShapes = [];
 
+var distanceService;
+
 function GoogleMap(init_point) {
   this.init_point = init_point;
   this.nightMode = false;
+  distanceService = new google.maps.DistanceMatrixService();
+
   this.nightStyleMap = new google.maps.StyledMapType([{
       "elementType": "geometry",
       "stylers": [{
@@ -428,11 +432,7 @@ GoogleMap.prototype.drawHousings = function(data) {
         lat: Number(data[d][lt]),
         lng: Number(data[d][lg])
       };
-      var marker = new google.maps.Marker({
-        position: point,
-        map: this.map
-      });
-      addedMarkers.push(marker);
+      drawMarker(point, this.map);
     } else {
       //console.log("null");
     }
@@ -451,9 +451,7 @@ GoogleMap.prototype.drawDistricts = function(data) {
       } else {
         fCoordinates = formatCoordinates(coordinates[j]);
       }
-      let polygon = drawPolygon(fCoordinates, color);
-      polygon.setMap(this.map);
-      addedShapes.push(polygon);
+      drawPolygon(fCoordinates, color, this.map);
     }
   }
 }
@@ -469,25 +467,32 @@ GoogleMap.prototype.drawNeighborhood = function(data) {
       lng: Number(cor.substring(0, index)),
       lat: Number(cor.substring(index + 1, cor.length))
     };
-
-    let marker = new google.maps.Marker({
-      position: coordinates[i],
-      map: this.map
-    });
-    addedMarkers.push(marker);
+    drawMarker(coordinates[i], this.map);
   }
   return coordinates;
 }
 
-function drawPolygon(coordinate, color) {
+function drawMarker(coordinate, map) {
+  let marker = new google.maps.Marker({
+    position: coordinate,
+    map: map
+  });
+  addedMarkers.push(marker);
+  return marker;
+}
+
+function drawPolygon(coordinate, color, map) {
   let district = new google.maps.Polygon({
     paths: coordinate,
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
     strokeWeight: 2,
     fillColor: color,
-    fillOpacity: 0.35
+    fillOpacity: 0.35,
+    map: map
   });
+
+  addedShapes.push(district);
 
   return district;
 }
@@ -522,6 +527,23 @@ function clearElementsInMap(elements) {
 GoogleMap.prototype.clearMarkers = function() {
   clearElementsInMap(addedMarkers);
 }
+
 GoogleMap.prototype.clearShapes = function() {
   clearElementsInMap(addedShapes);
+}
+
+GoogleMap.prototype.distanceBeetwen = function(origin, destination, mode) {
+  drawMarker(origin, this.map);
+  drawMarker(destination, this.map);
+  if (distanceService != null) {
+    distanceService.getDistanceMatrix({
+      origins: [origin],
+      destinations: [destination],
+      travelMode: mode
+    }, function(response, status) {
+      console.log("DISTANCE");
+      console.log(response);
+      console.log(status);
+    });
+  }
 }
