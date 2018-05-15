@@ -1,6 +1,6 @@
 // Principal palette #646E74, #262D31, #D4D5D8, #A3A7AD, #448F9C
 var lightsButton, parametersButtons = {},
-  boroughsButtons = {};
+  boroughsButtons = {}, buttonsGroup = [];
 var googleMap, dataManager, idsDataBases, data;
 const BOROUGHS = [
   "MANHATTAN",
@@ -15,11 +15,16 @@ $(document).ready(function() {
   let sb = $('#safetyButton');
   let ab = $('#affordabilityButton');
   let db = $('#distanceButton');
+
   $('#parametersButtons').on('change', function(event) {
     parametersButtons["SAFETY"] = sb[0].control.checked;
     parametersButtons["AFFORDABILITY"] = ab[0].control.checked;
     parametersButtons["DISTANCE"] = db[0].control.checked;
   });
+
+  buttonsGroup.push(sb);
+  buttonsGroup.push(ab);
+  buttonsGroup.push(db);
 
   $("#boroughsButtons").on('click', function(event) {
     let btn = event['target'];
@@ -47,10 +52,11 @@ $(document).ready(function() {
       default:
         break;
     }
+    buttonsGroup.push(btn);
   });
 
   $("#searchButton").on('click', function() {
-    $("#mainNavbar").collapse("hide");
+    //$("#mainNavbar").collapse("hide");
     search(boroughsButtons, parametersButtons);
   });
 
@@ -76,26 +82,45 @@ function switchMode() {
   }
 }
 
-function search(boroughs, parameters) {
-  googleMap.clearMarkers();
-  googleMap.clearShapes();
+function uncheckButtons(bt) {
+    for(let x = 0; x < bt.length; x++){
+        if ($(bt[x]).hasClass('active')) {
+            setTimeout(function() {
+                $(bt[x]).removeClass('active').find('input').prop('checked', false);
+            }.bind(bt[x]), 10);
 
-  if (parameters["DISTANCE"]) {
-    let min = null;
-    for (let b in boroughs) {
+            $(bt[x]).trigger('click');
+        }
+    }
+}
+
+function findMinDistance(bors){
+    if(Object.keys(bors).length == 0) return;
+
+    let min = null, counter = 0;
+    for (let b in bors) {
+      if (bors[b] == false) {
+          counter++;
+        continue;
+      }
+
       let ans = googleMap.distanceBeetwenPointAndDistricts(data[b]['districts'], INIT_POINT);
+
       for (let x = 0; x < ans.length; x++) {
         if (x == 0 && min == null) {
           min = {};
           min = ans[x];
+          min['borough'] = b;
         } else {
-          if (ans[x]['value'] < min['value']) {
+          if (ans[x]['distance'] < min['distance']) {
             min = ans[x];
+            min['borough'] = b;
           }
         }
       }
-      min['borough'] = b;
     }
+
+    if(counter == Object.keys(bors).length) return;
 
     for (let x = 0; x < data[min['borough']]['districts'].length; x++) {
       if (data[min['borough']]['districts'][x]['id'] == min['id']) {
@@ -103,9 +128,20 @@ function search(boroughs, parameters) {
         break;
       }
     }
+}
 
+function search(boroughs, parameters) {
+  googleMap.clearMarkers();
+  googleMap.clearShapes();
+
+  //uncheckButtons(buttonsGroup);
+
+  if (parameters["DISTANCE"]) {
+      findMinDistance(boroughsButtons);
   } else if (parameters["SAFETY"] || parameters["AFFORDABILITY"]) {
     alert("Coming soon!");
+  } else {
+      alert("Select any parameter");
   }
 }
 
