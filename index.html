@@ -10,53 +10,88 @@
 </head>
 
 <body>
-  <div class="container-fluid h-100">
-    <div class="row h-100">
-      <div class="col-md-12">
-        <div class="h-100" id="mapContainer">
+  <div class="container-fluid h-100 w-100 p-0 m-0">
+    <div class="row h-100 w-100 m-0">
+      <div class="col-md-12 w-100 p-0 m-0">
+        <div class="h-100 w-100 m-0" id="mapContainer">
         </div>
       </div>
     </div>
   </div>
 
   <nav class="navbar fixed-bottom navbar-expand-lg navbar-dark bg-dark" id="floatingNavbar">
-    <a class="navbar-brand">Be safe!</a>
-
-    <div class="navbar-header">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
+    <div class="container-fluid p-0 m-0">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#mainNavbar" aria-expanded="false" aria-controls="mainNavbar" aria-label="Toggle navigation">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="navbar-toggler-icon"></span>
         </button>
-
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav nav">
-          <li class="nav-item active">
-            <a class="nav-link" href="#" id="switchModeButton" data-toggle="tab">Turn on!</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="drawHousingsButton">Draw Housings</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="centerMapButton">Center map</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="drawDistrictsButton">Draw districts</a></li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="drawNeighborhoodsButton">Draw neighborhoods</a></li>
-          <li class="nav-item">
-            <li class="nav-item">
-              <a class="nav-link" href="#" id="clearMarkersButton">Clear map</a></li>
-            <li class="nav-item">
-        </ul>
+        <a class="navbar-brand" href="#">Be Safe!</a>
       </div>
+
+      <div class="collapse navbar-collapse mx-auto" id="mainNavbar">
+        <div class="btn-group btn-group-sm m-2">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              Boroughs
+            </div>
+            <div class="panel-body">
+              <div class="btn-group btn-group-sm" data-toggle="buttons" id="boroughsButtons">
+                <label class="btn btn-primary" href="#" id="bronxButton">
+                  <input type="checkbox" autocomplete="off"> The Bronx
+                </label>
+                <label class="btn btn-primary" href="#" id="brooklinButton">
+                  <input type="checkbox" autocomplete="off"> Brooklyn
+                </label>
+                <label class="btn btn-primary" href="#" id="manhattanButton">
+                  <input type="checkbox" autocomplete="off"> Manhattan
+                </label>
+                <label class="btn btn-primary" href="#" id="queensButton">
+                  <input type="checkbox" autocomplete="off"> Queens
+                </label>
+                <label class="btn btn-primary" href="#" id="statenIslandButton">
+                  <input type="checkbox" autocomplete="off"> Staten Island
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-default m-2">
+          <div class="panel-heading">
+            Parameters
+          </div>
+          <div class="panel-body">
+            <div class="btn-group btn-group-sm" data-toggle="buttons" id="parametersButtons">
+              <label class="btn btn-warning" href="#" id="safetyButton">
+                <input type="checkbox" autocomplete="off"> Safety
+              </label>
+              <label class="btn btn-warning" href="#" id="distanceButton">
+                <input type="checkbox" autocomplete="off"> Distance
+              </label>
+              <label class="btn btn-warning" href="#" id="affordabilityButton">
+                <input type="checkbox" autocomplete="off"> Affordability
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn ml-2 btn-success" id="searchButton">SEARCH</button>
+    </div>
+
   </nav>
 
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
   <script type="text/javascript" src="js/map.js"></script>
   <script type="text/javascript" src="js/data.js"></script>
   <script type="text/javascript" src="js/utils.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMuOraxfLI37XYVc-6VH6GrOTeouCZex4&callback=initMap"></script>
+  <script type="text/javascript" src="js/urlformer.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMuOraxfLI37XYVc-6VH6GrOTeouCZex4&callback=initMap&libraries=visualization,geometry"></script>
 </body>
 
 </html>

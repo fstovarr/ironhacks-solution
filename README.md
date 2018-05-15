@@ -17,18 +17,18 @@ Keywords: Safety, reliability, friendliness.
 ## Brief description
 *Be Safe!* plataform presents an approach to the solution of the codehacks's problem, offering a solution to the new students of the NYU Stern School to find the best area to live based on safety, affordability and closeness.
 
-In the first phase, the Kanban Methodology was used in order to specify the main tasks that would be carry out in this lapse of time to the technological, analytical and visualization requirements. So, Bootstrap, jQuery and Google Maps API libraries were used to make a map with the main locations was created and a first version of a navigation bar that allows access to the first functions developed.
+In the second phase, the Kanban Methodology was used in order to specify the main tasks that would be carry out in this lapse of time to the technological, analytical and visualization requirements. So, Bootstrap, jQuery and Google Maps API libraries were used to make a map with the main locations was created and a first version of a navigation bar that allows access to the first functions developed.
 
-For the analytical requeriments, the data of the four main data bases was obteined, and the districts and neighborhoods of New York was extracted from them.
+For the analytical requeriments, the data of the four main data bases was obteined, and the districts and neighborhoods of New York was extracted from them. And, for this stage, the user can filter the content of your search by distance of the closest district.
 
-By last, the application shows, with different colors, the 59 districts on a map provided by Google Maps The neighborhoods and the buildings, units and projects that there are in New York are showed too. And the first approach to develop a friendly user font-end UI was started, as support to move forward with the visualization requeriments.
+By last, the application shows, with different colors, the 59 districts on a map provided by Google Maps grouped by boroughs each time that them are selected in the navigation bar for the search. The neighborhoods and the buildings, units and projects that there are in New York are showed too. And a better approach of a friendly user font-end UI, as support to move forward with the visualization requeriments.
 
 ## Structured description:
 
 #### Map Visualization:
 
  1. Basic Map with specific location (your map is located in a meaningful place). **Yes**
- 2. Markers for location of interest places **Yes** 
+ 2. Markers for location of interest places **Yes**
  3. Labels for interest places names **No**
  4. Window to show detail information of a interest place **No**
  5. [Describe] Any other cover on the map (for example, cloud cover to show the weather effect) **No**
@@ -38,11 +38,11 @@ By last, the application shows, with different colors, the 59 districts on a map
 1. [Describe] Use Graph? What is the type? (bar chart, pie chart, radar chart ...) **No**
 2. [List] Any interaction available on the graph? List them (enable click on numbers, drag on lines, change time/variables...) **No**
 
-#### Interaction Form: 
+#### Interaction Form:
 1. [List] Any information output? list them. (text field, text area, label, plain HTML ...) **No**
 2. [List] Any operation option (filters)? **No**
 3. [List] Any information input? **No**
-4. [List] Interaction with Map? **The user can see the districts, neighborhoods and the buildings, units and projects, center the map in the NYU Stern School and filter the housing information by distance**
+4. [List] Interaction with Map? **The user can see the districts grouped by borough, and make a search based in the minimum distance to the NYU Stern School.**
 5. [List] Interaction with data visualization? List them. **No**
 
 ##  Build Case  

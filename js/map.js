@@ -439,10 +439,26 @@ GoogleMap.prototype.drawHousings = function(data) {
   }
 }
 
-GoogleMap.prototype.drawDistricts = function(data) {
+var visualBoroughs = {};
+GoogleMap.prototype.drawDistrictsInBorough = function(borough, name, show) {
+  if (show) {
+    this.drawDistricts(borough['districts'], name, 'districts');
+  } else {
+    this.clear(name, 'districts');
+  }
+}
+
+GoogleMap.prototype.clear = function(borough, label) {
+  if (visualBoroughs[borough] != null && visualBoroughs[borough][label] != null) {
+    clearElementsInMap(visualBoroughs[borough][label]);
+  }
+}
+
+GoogleMap.prototype.drawDistricts = function(data, borough, label) {
+  let colors = new Utils().getRandomColors(data.length, borough);
+
   for (let i = 0; i < data.length; i++) {
     let coordinates = data[i]['geometry']['coordinates'];
-    let color = new Utils().getRandomColor();
 
     for (let j = 0; j < coordinates.length; j++) {
       let fCoordinates;
@@ -451,9 +467,24 @@ GoogleMap.prototype.drawDistricts = function(data) {
       } else {
         fCoordinates = formatCoordinates(coordinates[j]);
       }
-      drawPolygon(fCoordinates, color, this.map);
+      drawPolygon(fCoordinates, borough, label, colors[i], this.map);
     }
   }
+}
+
+GoogleMap.prototype.drawDistrict = function(coordinates, borough, label) {
+  let colors = new Utils().getRandomColors(data.length, borough);
+
+  for (let j = 0; j < coordinates.length; j++) {
+    let fCoordinates;
+    if (coordinates.length > 1) {
+      fCoordinates = formatCoordinates(coordinates[j][0]);
+    } else {
+      fCoordinates = formatCoordinates(coordinates[j]);
+    }
+    drawPolygon(fCoordinates, borough, label, colors[0], this.map);
+  }
+
 }
 
 GoogleMap.prototype.drawNeighborhood = function(data) {
@@ -481,8 +512,8 @@ function drawMarker(coordinate, map) {
   return marker;
 }
 
-function drawPolygon(coordinate, color, map) {
-  let district = new google.maps.Polygon({
+function drawPolygon(coordinate, borough, label, color, map) {
+  let polygon = new google.maps.Polygon({
     paths: coordinate,
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
@@ -492,9 +523,15 @@ function drawPolygon(coordinate, color, map) {
     map: map
   });
 
-  addedShapes.push(district);
+  addedShapes.push(polygon);
+  if (visualBoroughs[borough] == null) {
+    visualBoroughs[borough] = {};
+  }
+  if (visualBoroughs[borough][label] == null) {
+    visualBoroughs[borough][label] = [];
+  }
 
-  return district;
+  visualBoroughs[borough][label].push(polygon);
 }
 
 function formatCoordinates(coordinate) {
@@ -532,18 +569,31 @@ GoogleMap.prototype.clearShapes = function() {
   clearElementsInMap(addedShapes);
 }
 
-GoogleMap.prototype.distanceBeetwen = function(origin, destination, mode) {
-  drawMarker(origin, this.map);
-  drawMarker(destination, this.map);
-  if (distanceService != null) {
-    distanceService.getDistanceMatrix({
-      origins: [origin],
-      destinations: [destination],
-      travelMode: mode
-    }, function(response, status) {
-      console.log("DISTANCE");
-      console.log(response);
-      console.log(status);
-    });
+GoogleMap.prototype.distanceBeetwenPointAndDistricts = function(districts, destination) {
+  let r = [];
+  for (let x = 0; x < districts.length; x++) {
+    r[x] = {};
+    r[x]['id'] = districts[x]['id'];
+    r[x]['distance'] = (this.distanceBeetwen(districts[x]['geometry']['average'], destination));
   }
+  return r;
+}
+
+GoogleMap.prototype.distanceBeetwen = function(origin, destination) {
+  //console.log(origin);
+
+  return google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(origin), new google.maps.LatLng(destination));
+
+  //console.log(google.maps.geometry.spherical.computeDistanceBetween(origin, destination));
+
+
+  // if (distanceService != null) {
+  //   distanceService.getDistanceMatrix({
+  //     origins: [origin],
+  //     destinations: [destination],
+  //     travelMode: mode
+  //   }, function(response, status) {
+  //     console.log(response);
+  //   });
+  // }
 }

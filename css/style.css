@@ -3,13 +3,27 @@ body, html {
   height: 100%;
 }
 
-.body, .container, .col-md-12, .row, .container-fluid {
+.body, .col-md-12, .rows {
   background-color: #646D73 !important;
-  margin: 0 !important;
+}
+
+.dropup .dropdown-menu {
+  top: auto;
+  bottom: 100%;
+  left: -50%;
+  margin-bottom: .125rem;
 }
 
 .navbar {
   background-color: #2a3134;
+}
+
+.btn-danger {
+  background-color: #c0392b;
+}
+
+.panel-default>.panel-heading {
+  color: white !important;
 }
 
 .navbar .navbar-brand {
@@ -134,4 +148,8 @@ body, html {
 .navbar-expand .navbar-nav .show .dropdown-menu .dropdown-item.active {
   color: #a4cfec;
   background-color: #3f8e9a;
+}
+
+.dropdown-menu {
+  background-color: grey;
 }
