@@ -1,6 +1,7 @@
 // Principal palette #646E74, #262D31, #D4D5D8, #A3A7AD, #448F9C
 var lightsButton, parametersButtons = {},
-  boroughsButtons = {}, buttonsGroup = [];
+  boroughsButtons = {},
+  buttonsGroup = [];
 var googleMap, dataManager, idsDataBases, data;
 const BOROUGHS = [
   "MANHATTAN",
@@ -83,65 +84,55 @@ function switchMode() {
 }
 
 function uncheckButtons(bt) {
-    for(let x = 0; x < bt.length; x++){
-        if ($(bt[x]).hasClass('active')) {
-            setTimeout(function() {
-                $(bt[x]).removeClass('active').find('input').prop('checked', false);
-            }.bind(bt[x]), 10);
+  for (let x = 0; x < bt.length; x++) {
+    if ($(bt[x]).hasClass('active')) {
+      setTimeout(function() {
+        $(bt[x]).removeClass('active').find('input').prop('checked', false);
+      }.bind(bt[x]), 10);
 
-            $(bt[x]).trigger('click');
-        }
+      $(bt[x]).trigger('click');
     }
+  }
 }
 
-function findMinDistance(bors){
-    if(Object.keys(bors).length == 0) return;
+function findMinDistance(bors) {
+  if (Object.keys(bors).length == 0) return;
 
-    let min = null, counter = 0;
-    for (let b in bors) {
-      if (bors[b] == false) {
-          counter++;
-        continue;
-      }
+  let min = null,
+    counter = 0;
 
-      let ans = googleMap.distanceBeetwenPointAndDistricts(data[b]['districts'], INIT_POINT);
-
-      for (let x = 0; x < ans.length; x++) {
-        if (x == 0 && min == null) {
-          min = {};
-          min = ans[x];
-          min['borough'] = b;
-        } else {
-          if (ans[x]['distance'] < min['distance']) {
-            min = ans[x];
-            min['borough'] = b;
-          }
-        }
-      }
+  let disTemp = [];
+  for (let b in bors) {
+    if (bors[b] == false) {
+      counter++;
+      continue;
     }
+    disTemp.push(data[b]['districts']);
+  }
 
-    if(counter == Object.keys(bors).length) return;
+  if (counter == Object.keys(bors).length) return;
 
-    for (let x = 0; x < data[min['borough']]['districts'].length; x++) {
-      if (data[min['borough']]['districts'][x]['id'] == min['id']) {
-        googleMap.drawDistrict(data[min['borough']]['districts'][x]['geometry']['coordinates'], min['borough'], 'districts');
-        break;
-      }
-    }
+  let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
+
+  for (let x = 0; x < 3; x++) {
+    let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
+    let name = dataManager.getBoroughName(distList[x]['boroughId']);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, 'districts');
+    googleMap.drawMarker(dist1['geometry']['middle']);
+  }
 }
 
 function search(boroughs, parameters) {
   googleMap.clearMarkers();
   googleMap.clearShapes();
 
-  //uncheckButtons(buttonsGroup);
-
   if (parameters["DISTANCE"]) {
-      findMinDistance(boroughsButtons);
+    findMinDistance(boroughsButtons);
   } else if (parameters["SAFETY"] || parameters["AFFORDABILITY"]) {
     alert("Coming soon!");
   } else {
-      alert("Select any parameter");
+    alert("Select any parameter");
   }
 }
 

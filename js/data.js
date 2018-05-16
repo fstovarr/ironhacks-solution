@@ -42,6 +42,7 @@ function DataManager() {
       continue;
     }
 
+    const dataM = this;
     $.get(URLS[key], function(data) {})
       .done(function(data) {
         switch (key) {
@@ -62,34 +63,45 @@ function DataManager() {
             let f = JSON.parse(data).features;
             // Organize JSON into boroughs
             for (let x in f) {
-              let bId = Math.floor(f[x]['properties']['BoroCD'] / 100);
+              let bId = dataM.getBoroughName(f[x]['properties']['BoroCD']);
+
               let acy = 0,
                 acx = 0,
                 asx = 0,
                 asy = 0;
 
-              if (bId > 0 && bId <= 5) {
+              if (bId != null) {
                 let cor = f[x]['geometry']['coordinates'];
+                let bounds = [];
+                let bb = new google.maps.LatLngBounds();
 
                 for (let y = 0; y < cor.length; y++) {
                   let sumx = 0,
                     sumy = 0,
                     totx = 0,
                     toty = 0;
-
                   for (let z = 0; z < cor[y].length; z++) {
                     if (cor[y][z][0] != null && cor[y][z][1] != null) {
+                      let yz0 = 0,
+                        yz1 = 0;
+
                       if (f[x]['geometry']['type'] != "Polygon") {
-                        sumx += parseFloat(cor[y][z][0][0]);
-                        sumy += parseFloat(cor[y][z][0][1]);
+                        yz0 = parseFloat(cor[y][z][0][0]);
+                        yz1 = parseFloat(cor[y][z][0][1]);
+                        sumx += yz0;
+                        sumy += yz1;
                         totx++;
                         toty++;
                       } else {
-                        sumx += parseFloat(cor[y][z][0]);
-                        sumy += parseFloat(cor[y][z][1]);
+                        yz0 = parseFloat(cor[y][z][0]);
+                        yz1 = parseFloat(cor[y][z][1]);
+                        sumx += yz0;
+                        sumy += yz1;
                         totx++;
                         toty++;
                       }
+
+                      bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
                     }
                   }
 
@@ -104,9 +116,15 @@ function DataManager() {
                   lat: parseFloat(acy / asy)
                 };
 
-                bor[BOROUGHS[bId - 1]]['districts'].push(f[x]);
+                // TODO arreglar bounding box
+                f[x]['geometry']['middle'] = {
+                  lat: (bb['b']['b'] + bb['b']['f']) / 2,
+                  lng: (bb['f']['b'] + bb['f']['f']) / 2
+                };
+
+                bor[bId]['districts'].push(f[x]);
               } else {
-                console.log(f[x]['properties']['BoroCD'] + " ID " + bId);
+                console.log("ERROR" + f[x]['properties']['BoroCD']);
               }
             }
             break;
@@ -134,6 +152,31 @@ function DataManager() {
 
   this.result = bor;
   this.keys = Object.keys(URLS);
+}
+
+DataManager.prototype.findDistrictById = function(data, internalId, boroughId) {
+  let name = this.getBoroughName(boroughId);
+
+  if (name == null) {
+    console.log("Error");
+    return;
+  }
+
+  for (let x = 0; x < data[name]['districts'].length; x++) {
+    if (data[name]['districts'][x]['id'] == internalId) {
+      return data[name]['districts'][x];
+    }
+  }
+}
+
+DataManager.prototype.getBoroughName = function(ids) {
+  let id = Math.floor(ids / 100);
+
+  if (id <= BOROUGHS.length && id > 0) {
+    return BOROUGHS[id - 1];
+  } else {
+    return null;
+  }
 }
 
 function addLatLng(a, b, map) {

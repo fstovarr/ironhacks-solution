@@ -2,12 +2,9 @@
 var addedMarkers = [],
   addedShapes = [];
 
-var distanceService;
-
 function GoogleMap(init_point) {
   this.init_point = init_point;
   this.nightMode = false;
-  distanceService = new google.maps.DistanceMatrixService();
 
   this.nightStyleMap = new google.maps.StyledMapType([{
       "elementType": "geometry",
@@ -432,7 +429,7 @@ GoogleMap.prototype.drawHousings = function(data) {
         lat: Number(data[d][lt]),
         lng: Number(data[d][lg])
       };
-      drawMarker(point, this.map);
+      drawMarker(point);
     } else {
       //console.log("null");
     }
@@ -472,7 +469,7 @@ GoogleMap.prototype.drawDistricts = function(data, borough, label) {
   }
 }
 
-GoogleMap.prototype.drawDistrict = function(coordinates, borough, label) {
+GoogleMap.prototype.drawDistrict = function(coordinates, borough) {
   let colors = new Utils().getRandomColors(data.length, borough);
 
   for (let j = 0; j < coordinates.length; j++) {
@@ -482,9 +479,8 @@ GoogleMap.prototype.drawDistrict = function(coordinates, borough, label) {
     } else {
       fCoordinates = formatCoordinates(coordinates[j]);
     }
-    drawPolygon(fCoordinates, borough, label, colors[0], this.map);
+    drawPolygon(fCoordinates, borough, 'district', colors[0], this.map);
   }
-
 }
 
 GoogleMap.prototype.drawNeighborhood = function(data) {
@@ -498,16 +494,17 @@ GoogleMap.prototype.drawNeighborhood = function(data) {
       lng: Number(cor.substring(0, index)),
       lat: Number(cor.substring(index + 1, cor.length))
     };
-    drawMarker(coordinates[i], this.map);
+    drawMarker(coordinates[i]);
   }
   return coordinates;
 }
 
-function drawMarker(coordinate, map) {
+GoogleMap.prototype.drawMarker = function(coordinate) {
   let marker = new google.maps.Marker({
     position: coordinate,
-    map: map
+    map: this.map
   });
+
   addedMarkers.push(marker);
   return marker;
 }
@@ -569,31 +566,36 @@ GoogleMap.prototype.clearShapes = function() {
   clearElementsInMap(addedShapes);
 }
 
-GoogleMap.prototype.distanceBeetwenPointAndDistricts = function(districts, destination) {
+GoogleMap.prototype.getNearestDistricts = function(districts, point) {
   let r = [];
+
   for (let x = 0; x < districts.length; x++) {
-    r[x] = {};
-    r[x]['id'] = districts[x]['id'];
-    r[x]['distance'] = (this.distanceBeetwen(districts[x]['geometry']['average'], destination));
+    for (let y = 0; y < districts[x].length; y++) {
+      let a = {
+        distance: this.distancePointToDistrict(districts[x][y], point),
+        id: districts[x][y]['id'],
+        boroughId: districts[x][y]['properties']['BoroCD']
+      }
+      r.push(a);
+    }
   }
+
+  r.sort(function(a, b) {
+    return a['distance'] - b['distance'];
+  });
+
   return r;
 }
 
+GoogleMap.prototype.distancePointToDistrict = function(district, point) {
+  return this.distanceBeetwen(district['geometry']['middle'], point);
+  // return this.distanceBeetwen(district['geometry']['average'], point);
+}
+
 GoogleMap.prototype.distanceBeetwen = function(origin, destination) {
-  //console.log(origin);
-
   return google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(origin), new google.maps.LatLng(destination));
+}
 
-  //console.log(google.maps.geometry.spherical.computeDistanceBetween(origin, destination));
-
-
-  // if (distanceService != null) {
-  //   distanceService.getDistanceMatrix({
-  //     origins: [origin],
-  //     destinations: [destination],
-  //     travelMode: mode
-  //   }, function(response, status) {
-  //     console.log(response);
-  //   });
-  // }
+GoogleMap.prototype.zoom = function(z) {
+  this.map.setZoom(z);
 }
