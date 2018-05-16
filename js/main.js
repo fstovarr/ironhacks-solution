@@ -1,8 +1,13 @@
 // Principal palette #646E74, #262D31, #D4D5D8, #A3A7AD, #448F9C
+
+// Variable declarations
 var lightsButton, parametersButtons = {},
   boroughsButtons = {},
-  buttonsGroup = [];
+  buttonsGroup = [],
+  heatMapButton;
 var googleMap, dataManager, idsDataBases, data;
+
+// Constants
 const BOROUGHS = [
   "MANHATTAN",
   "BRONX",
@@ -10,6 +15,16 @@ const BOROUGHS = [
   "QUEENS",
   "STATEN ISLAND"
 ];
+
+const INIT_POINT = {
+  lat: 40.7291,
+  lng: -73.9965
+};
+
+const CENTER_NY = {
+  lat: 40.72592801736515,
+  lng: -73.9503690946566
+}
 
 $(document).ready(function() {
   lightsButton = $('#switchModeButton').on('click', switchMode);
@@ -61,13 +76,11 @@ $(document).ready(function() {
     search(boroughsButtons, parametersButtons);
   });
 
+  heatMapButton = $("#heatmapButton").on('click', function() {
+    showHeatMap();
+  });
   getData();
 });
-
-const INIT_POINT = {
-  lat: 40.7291,
-  lng: -73.9965
-};
 
 function initMap() {
   googleMap = new GoogleMap(INIT_POINT);
@@ -81,6 +94,29 @@ function switchMode() {
   } else {
     lightsButton.text('Turn on!');
   }
+}
+
+function showHeatMap() {
+  if(!googleMap.isDataHeatmapLoaded()) {
+    let d = [];
+    for (let b in data) {
+      for (let x = 0; x < data[b]['crimes'].length; x++) {
+        let e = new google.maps.LatLng(data[b]['crimes'][x]['latlng']);
+        if (e.lat() != null && isNumber(e.lat()) && e.lng() != null && isNumber(e.lng())) {
+          d.push(e);
+        } else {
+          console.log("ERROR");
+          console.log(e);
+        }
+      }
+    }
+    googleMap.showHeatMap(d);
+  } else {
+    googleMap.showHeatMap();
+  }
+
+  // let center = dataManager.getBoundsNewYork();
+  googleMap.centerMap(CENTER_NY, 11);
 }
 
 function uncheckButtons(bt) {

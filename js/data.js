@@ -1,8 +1,8 @@
 const URLS = {
-  "neighborhood": 'https://data.cityofnewyork.us/api/views/xyye-rtrs/rows.json',
+  "neighborhood": 'https://data.cityofnewyork.us/resource/xyye-rtrs.json',
   "districts": "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson",
   "crimes": "https://data.cityofnewyork.us/resource/9s4h-37hy.json",
-  "housing": "https://data.cityofnewyork.us/api/views/hg8x-zxpr/rows.json"
+  "housing": "https://data.cityofnewyork.us/resource/q3m4-ttp3.json"
 };
 
 function DataManager() {
@@ -24,7 +24,7 @@ function DataManager() {
       "and latitude IS NOT NULL and longitude IS NOT NULL";
     urlF.select("ky_cd,ofns_desc,boro_nm,latitude,longitude,law_cat_cd")
       .where(condition)
-      .limit(100);
+      .limit(1000);
 
     $.get(urlF.finalurl, function() {}).done(function(data) {
       for (let x in data) {
@@ -35,6 +35,8 @@ function DataManager() {
       console.log(error);
     });
   }
+
+  // var boundsNY = new google.maps.LatLngBounds();
 
   for (let key in URLS) {
     // Skip crimes
@@ -59,12 +61,12 @@ function DataManager() {
               addLatLng(Number(cor.substring(index + 1, cor.length)), Number(cor.substring(0, index)), dd[i]);
             }
             break;
+
           case Object.keys(URLS)[1]:
             let f = JSON.parse(data).features;
-            // Organize JSON into boroughs
+            // Organize JSON into boroughsconsole.log(this.boundsNewYork);
             for (let x in f) {
               let bId = dataM.getBoroughName(f[x]['properties']['BoroCD']);
-
               let acy = 0,
                 acx = 0,
                 asx = 0,
@@ -72,7 +74,6 @@ function DataManager() {
 
               if (bId != null) {
                 let cor = f[x]['geometry']['coordinates'];
-                let bounds = [];
                 let bb = new google.maps.LatLngBounds();
 
                 for (let y = 0; y < cor.length; y++) {
@@ -100,8 +101,10 @@ function DataManager() {
                         totx++;
                         toty++;
                       }
+                      let latlng = new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1));
+                      bb.extend(latlng);
 
-                      bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+                      // boundsNY.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
                     }
                   }
 
@@ -148,11 +151,14 @@ function DataManager() {
       });
   }
 
-  //console.log(bor);
-
+  // this.boundsNewYork = boundsNY;
   this.result = bor;
   this.keys = Object.keys(URLS);
 }
+
+// DataManager.prototype.getBoundsNewYork = function() {
+//   return this.boundsNewYork;
+// }
 
 DataManager.prototype.findDistrictById = function(data, internalId, boroughId) {
   let name = this.getBoroughName(boroughId);

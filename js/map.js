@@ -543,11 +543,11 @@ function formatCoordinates(coordinate) {
   return r;
 }
 
-GoogleMap.prototype.centerMap = function(coordinates) {
+GoogleMap.prototype.centerMap = function(coordinates, zoom) {
   this.map.panTo(coordinates);
   var mmap = this.map;
   google.maps.event.addListenerOnce(this.map, 'idle', function() {
-    mmap.setZoom(17);
+    mmap.setZoom(zoom);
     mmap = null;
   })
 }
@@ -587,13 +587,60 @@ GoogleMap.prototype.getNearestDistricts = function(districts, point) {
   return r;
 }
 
+GoogleMap.prototype.isDataHeatmapLoaded = function() {
+  return typeof this.heatMapLayer !== 'undefined';
+}
+
+GoogleMap.prototype.showHeatMap = function(d) {
+  if (typeof d === 'undefined') {
+    if (this.heatMapLayer.getMap() == null) {
+      this.heatMapLayer.setMap(this.map);
+    } else {
+      this.heatMapLayer.setMap(null);
+    }
+  } else {
+    if (!this.isDataHeatmapLoaded()) {
+      var heatmap = new google.maps.visualization.HeatmapLayer({
+        data: d,
+        map: this.map
+      });
+
+      var gradient = [
+        'rgba(0, 255, 255, 0)',
+        'rgba(0, 255, 255, 1)',
+        'rgba(0, 191, 255, 1)',
+        'rgba(0, 127, 255, 1)',
+        'rgba(0, 63, 255, 1)',
+        'rgba(0, 0, 255, 1)',
+        'rgba(0, 0, 223, 1)',
+        'rgba(0, 0, 191, 1)',
+        'rgba(0, 0, 159, 1)',
+        'rgba(0, 0, 127, 1)',
+        'rgba(63, 0, 91, 1)',
+        'rgba(127, 0, 63, 1)',
+        'rgba(191, 0, 31, 1)',
+        'rgba(255, 0, 0, 1)'
+      ];
+      // heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
+
+      this.heatMapLayer = heatmap;
+    }
+  }
+}
+
+function isNumber(n) {
+  return isFinite(n) && !isNaN(parseFloat(n));
+}
+
 GoogleMap.prototype.distancePointToDistrict = function(district, point) {
   return this.distanceBeetwen(district['geometry']['middle'], point);
   // return this.distanceBeetwen(district['geometry']['average'], point);
 }
 
 GoogleMap.prototype.distanceBeetwen = function(origin, destination) {
-  return google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(origin), new google.maps.LatLng(destination));
+  let or = new google.maps.LatLng(origin);
+  // console.log(or);
+  return google.maps.geometry.spherical.computeDistanceBetween(or, new google.maps.LatLng(destination));
 }
 
 GoogleMap.prototype.zoom = function(z) {
