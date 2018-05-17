@@ -198,7 +198,9 @@ function GoogleMap(init_point) {
         "color": "#4e6d70"
       }]
     }
-  ]);
+  ], {
+    name: "Lights Off!"
+  });
   this.defaultStyleMap = new google.maps.StyledMapType([{
       "elementType": "geometry",
       "stylers": [{
@@ -377,23 +379,78 @@ function GoogleMap(init_point) {
         "color": "#92998d"
       }]
     }
-  ]);
+  ], {
+    name: "Lights On!"
+  });
+}
+
+function MapControl(controlDiv, map, listener, name) {
+  var controlUI = document.createElement('div');
+  controlUI.style.backgroundColor = '#fff';
+  controlUI.style.border = '2px solid #fff';
+  controlUI.style.borderRadius = '3px';
+  controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.margin = '10px';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = 'Click to recenter the map';
+  controlDiv.appendChild(controlUI);
+
+  var controlText = document.createElement('div');
+  controlText.style.color = 'rgb(25,25,25)';
+  controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+  controlText.style.fontSize = '12px';
+  controlText.style.lineHeight = '24px';
+  controlText.style.paddingLeft = '5px';
+  controlText.style.paddingRight = '5px';
+  controlText.innerHTML = name;
+  controlUI.appendChild(controlText);
+
+  controlUI.addEventListener('click', listener);
+}
+
+function createCenterControl(map, listener) {
+  var centerDiv = document.createElement('div');
+  var centerControl = new MapControl(centerDiv, map, listener, "Center");
+
+  centerDiv.index = 1;
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerDiv);
+}
+
+function createHeatmapControl(map, listener) {
+  var div = document.createElement('div');
+  var control = new MapControl(div, map, listener, "Crimes in NY");
+
+  div.index = 1;
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
 }
 
 // https://developers.google.com/maps/documentation/javascript/maptypes
-GoogleMap.prototype.showMap = function() {
+GoogleMap.prototype.showMap = function(listenerCenter, listenerHeatmap) {
   var mapOptions = {
     zoom: 18,
     center: INIT_POINT,
     mapTypeId: 'roadmap',
     heading: 90,
+    mapTypeControl: true,
     mapTypeControlOptions: {
-      mapTypeIds: ['night_style', 'default_style']
+      mapTypeIds: ['night_style', 'default_style'],
+    },
+    streetViewControl: true,
+    streetViewControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_CENTER
+    },
+    zoomControl: true,
+    zoomControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_CENTER
     }
   };
 
   this.map = new google.maps.Map(document.getElementById('mapContainer'),
     mapOptions);
+
+  createCenterControl(this.map, listenerCenter);
+  createHeatmapControl(this.map, listenerHeatmap);
 
   var marker = new google.maps.Marker({
     position: INIT_POINT,
@@ -429,7 +486,7 @@ GoogleMap.prototype.drawHousings = function(data) {
         lat: Number(data[d][lt]),
         lng: Number(data[d][lg])
       };
-      drawMarker(point);
+      drawMarker(point, 'circle');
     } else {
       //console.log("null");
     }
@@ -494,16 +551,33 @@ GoogleMap.prototype.drawNeighborhood = function(data) {
       lng: Number(cor.substring(0, index)),
       lat: Number(cor.substring(index + 1, cor.length))
     };
-    drawMarker(coordinates[i]);
+
+    drawMarker(coordinates[i], 'circle');
   }
   return coordinates;
 }
 
-GoogleMap.prototype.drawMarker = function(coordinate) {
+GoogleMap.prototype.drawMarker = function(coordinate, style) {
   let marker = new google.maps.Marker({
-    position: coordinate,
-    map: this.map
+    position: coordinate
   });
+
+  // if (style == 'circle') {
+  var circle = {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: 'red',
+    fillOpacity: .8,
+    scale: 6,
+    strokeColor: 'white',
+    strokeWeight: 1
+  };
+
+  console.log("CIRCLE");
+
+  marker.setIcon(circle);
+  // }
+
+  marker.setMap(this.map);
 
   addedMarkers.push(marker);
   return marker;
@@ -595,15 +669,17 @@ GoogleMap.prototype.showHeatMap = function(d) {
   if (typeof d === 'undefined') {
     if (this.heatMapLayer.getMap() == null) {
       this.heatMapLayer.setMap(this.map);
+      googleMap.centerMap(CENTER_NY, 11);
     } else {
       this.heatMapLayer.setMap(null);
     }
   } else {
     if (!this.isDataHeatmapLoaded()) {
       var heatmap = new google.maps.visualization.HeatmapLayer({
-        data: d,
-        map: this.map
+        data: d
       });
+
+      heatmap.setMap(this.map);
 
       var gradient = [
         'rgba(0, 255, 255, 0)',

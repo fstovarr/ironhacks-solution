@@ -76,15 +76,14 @@ $(document).ready(function() {
     search(boroughsButtons, parametersButtons);
   });
 
-  heatMapButton = $("#heatmapButton").on('click', function() {
-    showHeatMap();
-  });
   getData();
 });
 
 function initMap() {
   googleMap = new GoogleMap(INIT_POINT);
-  googleMap.showMap();
+  googleMap.showMap(function() {
+    googleMap.centerMap(INIT_POINT, 11)
+  }, showHeatMap);
 }
 
 function switchMode() {
@@ -97,16 +96,16 @@ function switchMode() {
 }
 
 function showHeatMap() {
-  if(!googleMap.isDataHeatmapLoaded()) {
+  if (!googleMap.isDataHeatmapLoaded()) {
     let d = [];
+    console.log(data);
     for (let b in data) {
-      for (let x = 0; x < data[b]['crimes'].length; x++) {
-        let e = new google.maps.LatLng(data[b]['crimes'][x]['latlng']);
+      for (let x = 0; x < Math.round(data[b]['crimes'].length / 2); x++) {
+        let e = new google.maps.LatLng(data[b]['crimes'][x]['latitude'], data[b]['crimes'][x]['longitude']);
         if (e.lat() != null && isNumber(e.lat()) && e.lng() != null && isNumber(e.lng())) {
           d.push(e);
         } else {
-          console.log("ERROR");
-          console.log(e);
+          console.log("Error construyendo heatmap");
         }
       }
     }
@@ -116,7 +115,6 @@ function showHeatMap() {
   }
 
   // let center = dataManager.getBoundsNewYork();
-  googleMap.centerMap(CENTER_NY, 11);
 }
 
 function uncheckButtons(bt) {
@@ -150,7 +148,9 @@ function findMinDistance(bors) {
 
   let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
 
-  for (let x = 0; x < 3; x++) {
+  console.log(distList);
+
+  for (let x = 0; x < 4; x++) {
     let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
     let name = dataManager.getBoroughName(distList[x]['boroughId']);
 

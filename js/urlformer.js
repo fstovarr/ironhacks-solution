@@ -5,6 +5,11 @@ function URLFormer(url) {
   this.finalurl = url + "?";
 }
 
+URLFormer.prototype.setEndPoint = function(url) {
+  this.endpoint = url + "?";
+  this.finalurl = url + "?";
+}
+
 URLFormer.prototype.select = function(cols) {
   let s = "&$select=";
   this.finalurl = this.finalurl + s + cols;
