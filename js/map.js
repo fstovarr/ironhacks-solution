@@ -1,6 +1,8 @@
 // Created with https://mapstyle.withgoogle.com/
 var addedMarkers = [],
-  addedShapes = [];
+  addedShapes = [],
+  polygons = [];
+var visualBoroughs = {};
 
 function GoogleMap(init_point) {
   this.init_point = init_point;
@@ -444,6 +446,7 @@ GoogleMap.prototype.showMap = function(listenerCenter, listenerHeatmap) {
     zoomControlOptions: {
       position: google.maps.ControlPosition.RIGHT_CENTER
     }
+
   };
 
   this.map = new google.maps.Map(document.getElementById('mapContainer'),
@@ -493,13 +496,16 @@ GoogleMap.prototype.drawHousings = function(data) {
   }
 }
 
-var visualBoroughs = {};
 GoogleMap.prototype.drawDistrictsInBorough = function(borough, name, show) {
   if (show) {
     this.drawDistricts(borough['districts'], name, 'districts');
   } else {
     this.clear(name, 'districts');
   }
+}
+
+GoogleMap.prototype.fitBounds = function(bounds) {
+  this.map.fitBounds(bounds);
 }
 
 GoogleMap.prototype.clear = function(borough, label) {
@@ -571,8 +577,6 @@ GoogleMap.prototype.drawMarker = function(coordinate, style) {
     strokeColor: 'white',
     strokeWeight: 1
   };
-
-  console.log("CIRCLE");
 
   marker.setIcon(circle);
   // }
@@ -702,6 +706,10 @@ GoogleMap.prototype.showHeatMap = function(d) {
       this.heatMapLayer = heatmap;
     }
   }
+}
+
+GoogleMap.prototype.getSaferDistricts = function() {
+  // google.maps.geometry.poly.containsLocation(e.latLng, bermudaTriangle);
 }
 
 function isNumber(n) {

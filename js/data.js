@@ -69,62 +69,62 @@ function DataManager() {
     // Organize JSON into boroughs
     for (let x in f) {
       let bId = dataM.getBoroughName(f[x]['properties']['BoroCD']);
-      let acy = 0,
-        acx = 0,
-        asx = 0,
-        asy = 0;
 
       if (bId != null) {
         let cor = f[x]['geometry']['coordinates'];
         let bb = new google.maps.LatLngBounds();
 
         for (let y = 0; y < cor.length; y++) {
-          let sumx = 0,
-            sumy = 0,
-            totx = 0,
-            toty = 0;
           for (let z = 0; z < cor[y].length; z++) {
             if (cor[y][z][0] != null && cor[y][z][1] != null) {
-              let yz0 = 0,
-                yz1 = 0;
 
               if (f[x]['geometry']['type'] != "Polygon") {
-                yz0 = parseFloat(cor[y][z][0][0]);
-                yz1 = parseFloat(cor[y][z][0][1]);
-                sumx += yz0;
-                sumy += yz1;
-                totx++;
-                toty++;
+                for (let a of cor[y][z]) {
+                  yz0 = parseFloat(a[0]);
+                  yz1 = parseFloat(a[1]);
+                  bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+                }
               } else {
                 yz0 = parseFloat(cor[y][z][0]);
                 yz1 = parseFloat(cor[y][z][1]);
-                sumx += yz0;
-                sumy += yz1;
-                totx++;
-                toty++;
+                bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
               }
-              let latlng = new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1));
-              bb.extend(latlng);
-
               // boundsNY.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
             }
           }
-
-          acx += parseFloat(sumx / totx);
-          acy += parseFloat(sumy / toty);
-          asx++;
-          asy++;
         }
 
-        f[x]['geometry']['average'] = {
-          lng: parseFloat(acx / asx),
-          lat: parseFloat(acy / asy)
-        };
+        f[x]['geometry']['boundbox'] = bb;
 
         f[x]['geometry']['middle'] = {
           lat: (bb['b']['b'] + bb['b']['f']) / 2,
           lng: (bb['f']['b'] + bb['f']['f']) / 2
         };
+
+        // Calc safety
+        for (let y of bor[bId]['crimes']) {
+          // console.log(y['latitude'] + " - " + y['longitude']);
+          y['lat_lng'] = {
+            lat: parseFloat(y['longitude']),
+            lng: parseFloat(y['latitude'])
+          };
+
+          if (bId == "BROOKLYN" && x == 1) {
+            console.log(bb.contains(y['lat_lng']));
+          }
+
+          if (bb.contains(y['lat_lng'])) {
+            if (typeof f[x]['crimes'] === 'undefined') {
+              f[x]['crimes'] = [];
+            }
+
+            f[x]['crimes'].push(y);
+          }
+        }
+
+        // Calc affordability
+
+        // console.log(bor);
 
         if (typeof bor[bId]['districts'] === 'undefined') {
           bor[bId]['districts'] = [];
@@ -138,7 +138,6 @@ function DataManager() {
   }).fail();
 
   console.log(bor);
-
   // this.boundsNewYork = boundsNY;
   this.result = bor;
   this.keys = Object.keys(URLS);

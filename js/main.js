@@ -76,10 +76,11 @@ $(document).ready(function() {
     search(boroughsButtons, parametersButtons);
   });
 
-  getData();
 });
 
 function initMap() {
+  getData();
+
   googleMap = new GoogleMap(INIT_POINT);
   googleMap.showMap(function() {
     googleMap.centerMap(INIT_POINT, 11)
@@ -131,6 +132,8 @@ function uncheckButtons(bt) {
 
 function findMinDistance(bors) {
   if (Object.keys(bors).length == 0) return;
+  let bb = null;
+
 
   let min = null,
     counter = 0;
@@ -148,15 +151,51 @@ function findMinDistance(bors) {
 
   let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
 
-  console.log(distList);
-
-  for (let x = 0; x < 4; x++) {
+  for (let x = 0; x < 1; x++) {
     let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
+    if (x == 0) {
+      bb = dist1['geometry']['boundbox'];
+    } else {
+      console.log("UNION");
+      console.log(dist1['geometry']['boundbox']);
+      bb.union(dist1['geometry']['boundbox']);
+    }
+
     let name = dataManager.getBoroughName(distList[x]['boroughId']);
 
     googleMap.drawDistrict(dist1['geometry']['coordinates'], name, 'districts');
+    // googleMap.drawDistrict(bb, name, 'districts');
     googleMap.drawMarker(dist1['geometry']['middle']);
+    // let coordinates = {};
+    // dist1['geometry']['coordinates']
+    // googleMap.drawPolygon(, name, 'districts');
   }
+
+  let center = bb.getCenter();
+
+  let rect = new google.maps.Rectangle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#FF0000',
+    fillOpacity: 0.35,
+  });
+
+  let dd = Object.assign(bb);
+
+  if (dd['b']['b'] > 0) {
+    let b = dd['b'];
+    dd['b'] = bb['f'];
+    dd['f'] = b;
+  }
+
+  // console.log(dd);
+
+  rect.setBounds(dd);
+  rect.setMap(googleMap.map);
+
+  googleMap.drawMarker(dd.getCenter());
+  googleMap.fitBounds(dd);
 }
 
 function search(boroughs, parameters) {
