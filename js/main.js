@@ -27,6 +27,7 @@ const CENTER_NY = {
 }
 
 $(document).ready(function() {
+  console.log("");
   lightsButton = $('#switchModeButton').on('click', switchMode);
   let sb = $('#safetyButton');
   let ab = $('#affordabilityButton');
@@ -76,10 +77,11 @@ $(document).ready(function() {
     search(boroughsButtons, parametersButtons);
   });
 
-  getData();
 });
 
 function initMap() {
+  getData();
+
   googleMap = new GoogleMap(INIT_POINT);
   googleMap.showMap(function() {
     googleMap.centerMap(INIT_POINT, 11)
@@ -131,6 +133,7 @@ function uncheckButtons(bt) {
 
 function findMinDistance(bors) {
   if (Object.keys(bors).length == 0) return;
+  let bb = null;
 
   let min = null,
     counter = 0;
@@ -148,28 +151,42 @@ function findMinDistance(bors) {
 
   let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
 
-  console.log(distList);
-
-  for (let x = 0; x < 4; x++) {
+  for (let x = 0; x < 1; x++) {
     let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
+    if (x == 0) {
+      bb = dist1['geometry']['boundbox'];
+    } else {
+      bb.union(dist1['geometry']['boundbox']);
+    }
+
     let name = dataManager.getBoroughName(distList[x]['boroughId']);
 
-    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, 'districts');
-    googleMap.drawMarker(dist1['geometry']['middle']);
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
   }
-}
 
-function search(boroughs, parameters) {
-  googleMap.clearMarkers();
-  googleMap.clearShapes();
+  let center = bb.getCenter();
 
-  if (parameters["DISTANCE"]) {
-    findMinDistance(boroughsButtons);
-  } else if (parameters["SAFETY"] || parameters["AFFORDABILITY"]) {
-    alert("Coming soon!");
-  } else {
-    alert("Select any parameter");
+  let rect = new google.maps.Rectangle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#FF0000',
+    fillOpacity: 0.35,
+  });
+
+  let dd = Object.assign(bb);
+
+  if (dd['b']['b'] > 0) {
+    let b = dd['b'];
+    dd['b'] = bb['f'];
+    dd['f'] = b;
   }
+
+  //rect.setBounds(dd);
+  //rect.setMap(googleMap.map);
+
+  googleMap.drawMarker(dd.getCenter());
+  googleMap.fitBounds(dd);
 }
 
 function drawHousings() {
@@ -197,4 +214,76 @@ function drawNeighborhood() {
 function clearMarkers() {
   googleMap.clearMarkers();
   googleMap.clearShapes();
+}
+
+function findSaferDistrict(bors) {
+  if (Object.keys(bors).length == 0) return;
+
+  let min = null,
+    counter = 0;
+
+  let disTemp = [];
+  for (let b in bors) {
+    if (bors[b] == false) {
+      counter++;
+      continue;
+    }
+    disTemp.push(data[b]['districts']);
+  }
+
+  if (counter == Object.keys(disTemp).length) return;
+
+  let distList = dataManager.getSaferDistricts(disTemp);
+
+  for (let x = 0; x < 1; x++) {
+    let dist1 = distList[x];
+    let name = dataManager.getBoroughName(distList[x]['properties']['BoroCD']);
+
+    console.log(dist1);
+    console.log(name);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+  }
+}
+
+function findAffordableDistrict(bors) {
+  if (Object.keys(bors).length == 0) return;
+
+  let min = null,
+    counter = 0;
+
+  let disTemp = [];
+  for (let b in bors) {
+    if (bors[b] == false) {
+      counter++;
+      continue;
+    }
+    disTemp.push(data[b]['districts']);
+  }
+
+  if (counter == Object.keys(bors).length) return;
+
+  let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
+
+  for (let x = 0; x < 4; x++) {
+    let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
+    let name = dataManager.getBoroughName(distList[x]['boroughId']);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+  }
+}
+
+function search(boroughs, parameters) {
+  googleMap.clearMarkers();
+  googleMap.clearShapes();
+
+  if (parameters["DISTANCE"]) {
+    findMinDistance(boroughsButtons);
+  } else if (parameters["SAFETY"]) {
+    findSaferDistrict(boroughsButtons);
+  } else if (parameters["AFFORDABILITY"]) {
+    findAffordableDistrict(boroughsButtons);
+  } else {
+    alert("Select any parameter");
+  }
 }
