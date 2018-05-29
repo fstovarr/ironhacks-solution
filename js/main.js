@@ -130,6 +130,44 @@ function uncheckButtons(bt) {
   }
 }
 
+function findSaferDistrict(bors) {
+  console.log(bors);
+  if (Object.keys(bors).length == 0) return;
+
+  let min = null,
+    counter = 0;
+
+  let disTemp = [];
+
+  for (let b in bors) {
+    if (bors[b] == false) {
+      counter++;
+    } else {
+      disTemp.push(data[b]['districts']);
+    }
+  }
+
+  console.log(counter);
+  console.log(disTemp.length);
+
+  if (counter == Object.keys(bors).length) return;
+
+  let distList = dataManager.getSaferDistricts(disTemp);
+
+  //console.log(distList);
+  //console.log("YES2");
+  for (let x = 0; x < 1; x++) {
+    let dist1 = dataManager.findDistrictById(data, distList['result'][x]['id'], distList['result'][x]['boroughId']);
+    console.log(dist1);
+    let name = dataManager.getBoroughName(distList['result'][x]['boroughId']);
+    console.log(name);
+    //console.log(name);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+  }
+  //console.log("YES3");
+}
+
 function findMinDistance(bors) {
   if (Object.keys(bors).length == 0) return;
   let bb = null;
@@ -156,8 +194,6 @@ function findMinDistance(bors) {
     if (x == 0) {
       bb = dist1['geometry']['boundbox'];
     } else {
-      console.log("UNION");
-      console.log(dist1['geometry']['boundbox']);
       bb.union(dist1['geometry']['boundbox']);
     }
 
@@ -198,14 +234,44 @@ function findMinDistance(bors) {
   googleMap.fitBounds(dd);
 }
 
+function findAffordableDistrict(bors) {
+  if (Object.keys(bors).length == 0) return;
+
+  let min = null,
+    counter = 0;
+
+  let disTemp = [];
+  for (let b in bors) {
+    if (bors[b] == false) {
+      counter++;
+      continue;
+    }
+    disTemp.push(data[b]['districts']);
+  }
+
+  if (counter == Object.keys(bors).length) return;
+
+  let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
+
+  for (let x = 0; x < 4; x++) {
+    let dist1 = dataManager.findDistrictById(data, distList[x]['id'], distList[x]['boroughId']);
+    let name = dataManager.getBoroughName(distList[x]['boroughId']);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+  }
+}
+
 function search(boroughs, parameters) {
   googleMap.clearMarkers();
   googleMap.clearShapes();
 
   if (parameters["DISTANCE"]) {
     findMinDistance(boroughsButtons);
-  } else if (parameters["SAFETY"] || parameters["AFFORDABILITY"]) {
-    alert("Coming soon!");
+  } else if (parameters["SAFETY"]) {
+    console.log(boroughsButtons);
+    findSaferDistrict(boroughsButtons);
+  } else if (parameters["AFFORDABILITY"]) {
+    findAffordableDistrict(boroughsButtons);
   } else {
     alert("Select any parameter");
   }

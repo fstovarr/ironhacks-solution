@@ -168,6 +168,45 @@ DataManager.prototype.getBoroughName = function(ids) {
   }
 }
 
+DataManager.prototype.getSaferDistricts = function(districts) {
+  let r = [];
+  let max = null,
+    min = null;
+
+  for (let x of districts) {
+    for (let y of x) {
+      let c = y['crimes'].length;
+      if (max == null) {
+        max = c;
+      } else {
+        max = c > max ? c : max;
+      }
+      if (min == null) {
+        min = c;
+      } else {
+        min = c < min ? c : min;
+      }
+
+      let a = {
+        crimes: c,
+        id: y['id'],
+        boroughId: y['properties']['BoroCD']
+      }
+      r.push(a);
+    }
+  }
+
+  r.sort(function(a, b) {
+    return a['crimes'] - b['crimes'];
+  });
+
+  return {
+    result: r,
+    min: min,
+    max: max
+  };
+}
+
 function addLatLng(a, b, map) {
   map['latlng'] = {
     lat: a,
