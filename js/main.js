@@ -27,7 +27,6 @@ const CENTER_NY = {
 }
 
 $(document).ready(function() {
-  console.log("");
   lightsButton = $('#switchModeButton').on('click', switchMode);
   let sb = $('#safetyButton');
   let ab = $('#affordabilityButton');
@@ -131,9 +130,41 @@ function uncheckButtons(bt) {
   }
 }
 
+function findSaferDistrict(bors) {
+  console.log(bors);
+  if (Object.keys(bors).length == 0) return;
+
+  let min = null;
+  let disTemp = [];
+
+  for (let b in bors) {
+    if (bors[b] == true) {
+      disTemp.push(data[b]['districts']);
+    }
+  }
+
+  if (disTemp.length == 0) return;
+
+  let distList = dataManager.getSaferDistricts(disTemp);
+
+  //console.log(distList);
+  //console.log("YES2");
+  for (let x = 0; x < 1; x++) {
+    let dist1 = dataManager.findDistrictById(data, distList['result'][x]['id'], distList['result'][x]['boroughId']);
+    console.log(dist1);
+    let name = dataManager.getBoroughName(distList['result'][x]['boroughId']);
+    console.log(name);
+    //console.log(name);
+
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+  }
+  //console.log("YES3");
+}
+
 function findMinDistance(bors) {
   if (Object.keys(bors).length == 0) return;
   let bb = null;
+
 
   let min = null,
     counter = 0;
@@ -161,7 +192,12 @@ function findMinDistance(bors) {
 
     let name = dataManager.getBoroughName(distList[x]['boroughId']);
 
-    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
+    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, 'districts');
+    // googleMap.drawDistrict(bb, name, 'districts');
+    googleMap.drawMarker(dist1['geometry']['middle']);
+    // let coordinates = {};
+    // dist1['geometry']['coordinates']
+    // googleMap.drawPolygon(, name, 'districts');
   }
 
   let center = bb.getCenter();
@@ -182,68 +218,13 @@ function findMinDistance(bors) {
     dd['f'] = b;
   }
 
-  //rect.setBounds(dd);
-  //rect.setMap(googleMap.map);
+  // console.log(dd);
+
+  rect.setBounds(dd);
+  rect.setMap(googleMap.map);
 
   googleMap.drawMarker(dd.getCenter());
   googleMap.fitBounds(dd);
-}
-
-function drawHousings() {
-  googleMap.drawHousings(data['housing']);
-}
-
-function getData() {
-  dataManager = new DataManager();
-  idsDataBases = dataManager.getKeysURLS();
-  data = dataManager.getDataFromURLS();
-}
-
-function centerMap() {
-  googleMap.centerMap(INIT_POINT);
-}
-
-function drawDistricts() {
-  googleMap.drawDistricts(data['districts']);
-}
-
-function drawNeighborhood() {
-  googleMap.drawNeighborhood(data['neighborhood']);
-}
-
-function clearMarkers() {
-  googleMap.clearMarkers();
-  googleMap.clearShapes();
-}
-
-function findSaferDistrict(bors) {
-  if (Object.keys(bors).length == 0) return;
-
-  let min = null,
-    counter = 0;
-
-  let disTemp = [];
-  for (let b in bors) {
-    if (bors[b] == false) {
-      counter++;
-      continue;
-    }
-    disTemp.push(data[b]['districts']);
-  }
-
-  if (counter == Object.keys(disTemp).length) return;
-
-  let distList = dataManager.getSaferDistricts(disTemp);
-
-  for (let x = 0; x < 1; x++) {
-    let dist1 = distList[x];
-    let name = dataManager.getBoroughName(distList[x]['properties']['BoroCD']);
-
-    console.log(dist1);
-    console.log(name);
-
-    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
-  }
 }
 
 function findAffordableDistrict(bors) {
@@ -280,10 +261,38 @@ function search(boroughs, parameters) {
   if (parameters["DISTANCE"]) {
     findMinDistance(boroughsButtons);
   } else if (parameters["SAFETY"]) {
+    console.log(boroughsButtons);
     findSaferDistrict(boroughsButtons);
   } else if (parameters["AFFORDABILITY"]) {
     findAffordableDistrict(boroughsButtons);
   } else {
     alert("Select any parameter");
   }
+}
+
+function drawHousings() {
+  googleMap.drawHousings(data['housing']);
+}
+
+function getData() {
+  dataManager = new DataManager();
+  idsDataBases = dataManager.getKeysURLS();
+  data = dataManager.getDataFromURLS();
+}
+
+function centerMap() {
+  googleMap.centerMap(INIT_POINT);
+}
+
+function drawDistricts() {
+  googleMap.drawDistricts(data['districts']);
+}
+
+function drawNeighborhood() {
+  googleMap.drawNeighborhood(data['neighborhood']);
+}
+
+function clearMarkers() {
+  googleMap.clearMarkers();
+  googleMap.clearShapes();
 }

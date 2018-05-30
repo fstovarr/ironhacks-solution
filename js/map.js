@@ -520,23 +520,19 @@ GoogleMap.prototype.drawDistricts = function(data, borough, label) {
   for (let i = 0; i < data.length; i++) {
     let coordinates = data[i]['geometry']['coordinates'];
 
-
     for (let j = 0; j < coordinates.length; j++) {
       let fCoordinates;
-
-      if (coordinates[j].length == 1) {
+      if (coordinates.length > 1) {
         fCoordinates = formatCoordinates(coordinates[j][0]);
       } else {
-        console.log(coordinates[j]);
         fCoordinates = formatCoordinates(coordinates[j]);
       }
-
       drawPolygon(fCoordinates, borough, label, colors[i], this.map);
     }
   }
 }
 
-GoogleMap.prototype.drawDistrict = function(coordinates, borough, center) {
+GoogleMap.prototype.drawDistrict = function(coordinates, borough) {
   let colors = new Utils().getRandomColors(data.length, borough);
 
   for (let j = 0; j < coordinates.length; j++) {
@@ -548,8 +544,6 @@ GoogleMap.prototype.drawDistrict = function(coordinates, borough, center) {
     }
     drawPolygon(fCoordinates, borough, 'district', colors[0], this.map);
   }
-
-  this.drawMarker(center);
 }
 
 GoogleMap.prototype.drawNeighborhood = function(data) {

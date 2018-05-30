@@ -43,9 +43,9 @@ function getURLSByBorough(bb) {
 }
 
 function makeHTTPRequest(keys, urls, bor) {
-  for (let i of keys) {
-    $.get(urls[i], function() {}).done(function(data) {
-      bor[i] = data;
+  for (let i in keys) {
+    $.get(urls[keys[i]], function() {}).done(function(data) {
+      bor[keys[i]] = data;
     }).fail();
   }
 }
@@ -77,9 +77,19 @@ function DataManager() {
         for (let y = 0; y < cor.length; y++) {
           for (let z = 0; z < cor[y].length; z++) {
             if (cor[y][z][0] != null && cor[y][z][1] != null) {
-              yz0 = parseFloat(cor[y][z][0]);
-              yz1 = parseFloat(cor[y][z][1]);
-              bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+
+              if (f[x]['geometry']['type'] != "Polygon") {
+                for (let a of cor[y][z]) {
+                  yz0 = parseFloat(a[0]);
+                  yz1 = parseFloat(a[1]);
+                  bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+                }
+              } else {
+                yz0 = parseFloat(cor[y][z][0]);
+                yz1 = parseFloat(cor[y][z][1]);
+                bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+              }
+              // boundsNY.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
             }
           }
         }
@@ -87,9 +97,30 @@ function DataManager() {
         f[x]['geometry']['boundbox'] = bb;
 
         f[x]['geometry']['middle'] = {
-          lat: (bb['f']['b'] + bb['f']['f']) / 2,
-          lng: (bb['b']['b'] + bb['b']['f']) / 2
+          lat: (bb['b']['b'] + bb['b']['f']) / 2,
+          lng: (bb['f']['b'] + bb['f']['f']) / 2
         };
+
+        // Calc safety
+        for (let y of bor[bId]['crimes']) {
+          // console.log(y['latitude'] + " - " + y['longitude']);
+          y['lat_lng'] = {
+            lat: parseFloat(y['longitude']),
+            lng: parseFloat(y['latitude'])
+          };
+
+          if (bId == "BROOKLYN" && x == 1) {
+            console.log(bb.contains(y['lat_lng']));
+          }
+
+          if (bb.contains(y['lat_lng'])) {
+            if (typeof f[x]['crimes'] === 'undefined') {
+              f[x]['crimes'] = [];
+            }
+
+            f[x]['crimes'].push(y);
+          }
+        }
 
         // Calc affordability
 
@@ -112,39 +143,8 @@ function DataManager() {
   this.keys = Object.keys(URLS);
 }
 
-function calcSafety() {
-  // Calc safety
-  for (let y of bor[bId]['crimes']) {
-    // console.log(y['latitude'] + " - " + y['longitude']);
-    y['lat_lng'] = {
-      lat: parseFloat(y['longitude']),
-      lng: parseFloat(y['latitude'])
-    };
-
-    if (bb.contains(y['lat_lng'])) {
-      if (typeof f[x]['crimes'] === 'undefined') {
-        f[x]['crimes'] = [];
-      }
-
-      f[x]['crimes'].push(y);
-    }
-  }
-}
-
-DataManager.prototype.getSaferDistricts = function(districts) {
-  let r = districts[0];
-
-  r.sort(function(a, b) {
-    return a['crimes'].length - b['crimes'].length;
-  });
-
-  return r;
-}
-
 DataManager.prototype.findDistrictById = function(data, internalId, boroughId) {
   let name = this.getBoroughName(boroughId);
-  console.log(boroughId);
-  console.log(name);
 
   if (name == null) {
     console.log("Error");
@@ -166,6 +166,45 @@ DataManager.prototype.getBoroughName = function(ids) {
   } else {
     return null;
   }
+}
+
+DataManager.prototype.getSaferDistricts = function(districts) {
+  let r = [];
+  let max = null,
+    min = null;
+
+  for (let x of districts) {
+    for (let y of x) {
+      let c = y['crimes'].length;
+      if (max == null) {
+        max = c;
+      } else {
+        max = c > max ? c : max;
+      }
+      if (min == null) {
+        min = c;
+      } else {
+        min = c < min ? c : min;
+      }
+
+      let a = {
+        crimes: c,
+        id: y['id'],
+        boroughId: y['properties']['BoroCD']
+      }
+      r.push(a);
+    }
+  }
+
+  r.sort(function(a, b) {
+    return a['crimes'] - b['crimes'];
+  });
+
+  return {
+    result: r,
+    min: min,
+    max: max
+  };
 }
 
 function addLatLng(a, b, map) {
