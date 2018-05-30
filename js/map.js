@@ -646,11 +646,26 @@ GoogleMap.prototype.clearShapes = function() {
 
 GoogleMap.prototype.getNearestDistricts = function(districts, point) {
   let r = [];
+  let max = null,
+    min = null;
 
   for (let x = 0; x < districts.length; x++) {
     for (let y = 0; y < districts[x].length; y++) {
+      let c = this.distancePointToDistrict(districts[x][y], point);
+
+      if (max == null) {
+        max = c;
+      } else {
+        max = c > max ? c : max;
+      }
+      if (min == null) {
+        min = c;
+      } else {
+        min = c < min ? c : min;
+      }
+
       let a = {
-        distance: this.distancePointToDistrict(districts[x][y], point),
+        distance: c,
         id: districts[x][y]['id'],
         boroughId: districts[x][y]['properties']['BoroCD']
       }
@@ -658,11 +673,11 @@ GoogleMap.prototype.getNearestDistricts = function(districts, point) {
     }
   }
 
-  r.sort(function(a, b) {
-    return a['distance'] - b['distance'];
-  });
-
-  return r;
+  return {
+    result: r,
+    min: min,
+    max: max
+  };
 }
 
 GoogleMap.prototype.isDataHeatmapLoaded = function() {
