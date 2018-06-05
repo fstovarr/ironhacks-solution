@@ -446,7 +446,6 @@ GoogleMap.prototype.showMap = function(listenerCenter, listenerHeatmap) {
     zoomControlOptions: {
       position: google.maps.ControlPosition.RIGHT_CENTER
     }
-
   };
 
   this.map = new google.maps.Map(document.getElementById('mapContainer'),
@@ -464,6 +463,29 @@ GoogleMap.prototype.showMap = function(listenerCenter, listenerHeatmap) {
   this.map.mapTypes.set('default_style', this.defaultStyleMap);
 
   this.map.setMapTypeId('night_style');
+
+  // When the user clicks, set 'isColorful', changing the color of the letters.
+  this.map.data.addListener('click', function(event) {
+    event.feature.setProperty('isColorful', true);
+  });
+
+  // When the user hovers, tempt them to click by outlining the letters.
+  // Call revertStyle() to remove all overrides. This will use the style rules
+  // defined in the function passed to setStyle()
+  this.map.data.addListener('mouseover', function(event) {
+    this.map.data.revertStyle();
+    for (let v of addedShapes) {
+      if (v.getProperty('districtId') == event.feature.getProperty('districtId')) {
+        this.map.data.overrideStyle(v, {
+          strokeWeight: 8
+        });
+      }
+    }
+  });
+
+  this.map.data.addListener('mouseout', function(event) {
+    this.map.data.revertStyle();
+  });
 }
 
 GoogleMap.prototype.changeToNightMode = function() {
@@ -498,7 +520,24 @@ GoogleMap.prototype.drawHousings = function(data) {
 
 GoogleMap.prototype.drawDistrictsInBorough = function(borough, name, show) {
   if (show) {
-    this.drawDistricts(borough['districts'], name, 'districts');
+    this.drawDistricts(borough['districts']);
+
+
+    this.map.data.setStyle(function(feature) {
+      let color = new Utils().getRandomColors(5, feature.getProperty('boroughId'))[BOROUGHS.indexOf(feature.getProperty('boroughId'))];
+      console.log(color);
+      if (feature.getProperty('isColorful')) {
+        color = feature.getProperty('color');
+      }
+
+      return /** @type {google.maps.Data.StyleOptions} */ ({
+        fillColor: color,
+        strokeColor: color,
+        strokeWeight: 2
+      });
+    });
+
+
   } else {
     this.clear(name, 'districts');
   }
@@ -510,39 +549,22 @@ GoogleMap.prototype.fitBounds = function(bounds) {
 
 GoogleMap.prototype.clear = function(borough, label) {
   if (visualBoroughs[borough] != null && visualBoroughs[borough][label] != null) {
-    clearElementsInMap(visualBoroughs[borough][label]);
-  }
-}
-
-GoogleMap.prototype.drawDistricts = function(data, borough, label) {
-  let colors = new Utils().getRandomColors(data.length, borough);
-
-  for (let i = 0; i < data.length; i++) {
-    let coordinates = data[i]['geometry']['coordinates'];
-
-    for (let j = 0; j < coordinates.length; j++) {
-      let fCoordinates;
-      if (coordinates.length > 1) {
-        fCoordinates = formatCoordinates(coordinates[j][0]);
-      } else {
-        fCoordinates = formatCoordinates(coordinates[j]);
+    //clearElementsInMap(visualBoroughs[borough][label]);
+    let ind = 0;
+    for (ind = 0; ind < BOROUGHS.length; ind++) {
+      if (BOROUGHS[ind] == borough) {
+        ind++;
+        break;
       }
-      drawPolygon(fCoordinates, borough, label, colors[i], this.map);
     }
-  }
-}
 
-GoogleMap.prototype.drawDistrict = function(coordinates, borough) {
-  let colors = new Utils().getRandomColors(data.length, borough);
+    let tempMap = this.map;
 
-  for (let j = 0; j < coordinates.length; j++) {
-    let fCoordinates;
-    if (coordinates.length > 1) {
-      fCoordinates = formatCoordinates(coordinates[j][0]);
-    } else {
-      fCoordinates = formatCoordinates(coordinates[j]);
-    }
-    drawPolygon(fCoordinates, borough, 'district', colors[0], this.map);
+    this.map.data.forEach(function(feature) {
+      if (Math.floor(feature.getProperty('districtId') / 100) == ind) {
+        tempMap.data.remove(feature);
+      }
+    });
   }
 }
 
@@ -579,7 +601,7 @@ GoogleMap.prototype.drawMarker = function(coordinate, style) {
   };
 
   marker.setIcon(circle);
-  // }
+  // }  console.log(coordinate);
 
   marker.setMap(this.map);
 
@@ -587,18 +609,44 @@ GoogleMap.prototype.drawMarker = function(coordinate, style) {
   return marker;
 }
 
-function drawPolygon(coordinate, borough, label, color, map) {
-  let polygon = new google.maps.Polygon({
-    paths: coordinate,
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.8,
-    strokeWeight: 2,
-    fillColor: color,
-    fillOpacity: 0.35,
-    map: map
-  });
+GoogleMap.prototype.drawDistricts = function(data) {
+  for (let i = 0; i < data.length; i++) {
+    let borough = dataManager.getBoroughName(data[i]['properties']['BoroCD']);
+    let id = data[i]['properties']['BoroCD'];
+    let colors = new Utils().getRandomColors(data.length, borough);
+    let coordinates = data[i]['geometry']['coordinates'];
 
-  addedShapes.push(polygon);
+    if (typeof data[i]['geometry']['shapes'] === 'undefined') {
+      data[i]['geometry']['shapes'] = [];
+    }
+
+    for (let j = 0; j < coordinates.length; j++) {
+      let fCoordinates;
+
+      if (coordinates.length > 1) {
+        if (isNumber(coordinates[j][0][0])) {
+          fCoordinates = formatCoordinates(coordinates[j]);
+        } else {
+          fCoordinates = formatCoordinates(coordinates[j][0]);
+        }
+      } else {
+        fCoordinates = formatCoordinates(coordinates[j]);
+      }
+
+      data[i]['geometry']['shapes'].push(drawPolygon(fCoordinates, borough, id, 'districts', colors[i], this.map));
+    }
+  }
+}
+
+function drawPolygon(coordinate, borough, id, label, color, map) {
+  let feature = new google.maps.Data.Feature();
+  feature.setGeometry(new google.maps.Data.Polygon([coordinate]));
+  feature.setProperty('boroughId', borough);
+  feature.setProperty('districtId', id);
+  map.data.add(feature);
+
+  addedShapes.push(feature);
+
   if (visualBoroughs[borough] == null) {
     visualBoroughs[borough] = {};
   }
@@ -606,7 +654,11 @@ function drawPolygon(coordinate, borough, label, color, map) {
     visualBoroughs[borough][label] = [];
   }
 
-  visualBoroughs[borough][label].push(polygon);
+  visualBoroughs[borough][label].push(feature);
+
+  return new google.maps.Polygon({
+    path: coordinate
+  });
 }
 
 function formatCoordinates(coordinate) {
@@ -630,18 +682,99 @@ GoogleMap.prototype.centerMap = function(coordinates, zoom) {
   })
 }
 
-function clearElementsInMap(elements) {
+function clearElementsInMap(map, elements) {
   for (let v of elements) {
+    map.data.remove(v);
+  }
+  elements = [];
+}
+
+GoogleMap.prototype.clearMarkers = function() {
+  for (let v of addedMarkers) {
     v.setMap(null);
   }
 }
 
-GoogleMap.prototype.clearMarkers = function() {
-  clearElementsInMap(addedMarkers);
+GoogleMap.prototype.clearShapes = function() {
+  clearElementsInMap(this.map, addedShapes);
 }
 
-GoogleMap.prototype.clearShapes = function() {
-  clearElementsInMap(addedShapes);
+GoogleMap.prototype.getAffordableDistricts = function(districts) {
+  let r = [];
+  let max = null,
+    min = null;
+
+  for (let x = 0; x < districts.length; x++) {
+    for (let y = 0; y < districts[x].length; y++) {
+      if (typeof districts[x][y]['low_income_units'] === 'undefined') {
+        districts[x][y]['low_income_units'] = 0;
+      }
+
+      let new_housing = [];
+
+      if (typeof districts[x][y]['calc_housing'] === 'undefined') {
+        for (let z = 0; z < districts[x][y]['housing'].length; z++) {
+          for (let shape of districts[x][y]['geometry']['shapes']) {
+            if (google.maps.geometry.poly.containsLocation(new google.maps.LatLng(districts[x][y]['housing'][z]['lat_lng']),
+                shape)) {
+
+              new_housing.push(districts[x][y]['housing'][z]);
+
+              let n1 = parseFloat(districts[x][y]['housing'][z]['extremely_low_income_units']),
+                n2 = parseFloat(districts[x][y]['housing'][z]['very_low_income_units']),
+                n3 = parseFloat(districts[x][y]['housing'][z]['low_income_units']);
+
+              let total = 0;
+
+              if (isNumber(n1)) {
+                total += n1;
+              }
+
+              if (isNumber(n3)) {
+                total += n3;
+              }
+
+              if (isNumber(n3)) {
+                total += n2;
+              }
+
+              // console.log(districts[x][y]);
+              districts[x][y]['low_income_units'] += total;
+              // console.log(districts[x][y]);
+            }
+          }
+        }
+      }
+
+      districts[x][y]['housing'] = new_housing;
+      districts[x][y]['calc_housing'] = true;
+
+      let c = districts[x][y]['low_income_units'];
+
+      if (max == null) {
+        max = c;
+      } else {
+        max = c > max ? c : max;
+      }
+      if (min == null) {
+        min = c;
+      } else {
+        min = c < min ? c : min;
+      }
+
+      let a = {
+        low_income_units: c,
+        id: districts[x][y]['properties']['BoroCD']
+      }
+      r.push(a);
+    }
+  }
+
+  return {
+    result: r,
+    min: min,
+    max: max
+  };
 }
 
 GoogleMap.prototype.getNearestDistricts = function(districts, point) {
@@ -652,6 +785,7 @@ GoogleMap.prototype.getNearestDistricts = function(districts, point) {
   for (let x = 0; x < districts.length; x++) {
     for (let y = 0; y < districts[x].length; y++) {
       let c = this.distancePointToDistrict(districts[x][y], point);
+      districts[x][y]['distance'] = c;
 
       if (max == null) {
         max = c;
@@ -666,8 +800,7 @@ GoogleMap.prototype.getNearestDistricts = function(districts, point) {
 
       let a = {
         distance: c,
-        id: districts[x][y]['id'],
-        boroughId: districts[x][y]['properties']['BoroCD']
+        id: districts[x][y]['properties']['BoroCD']
       }
       r.push(a);
     }
@@ -721,10 +854,6 @@ GoogleMap.prototype.showHeatMap = function(d) {
       this.heatMapLayer = heatmap;
     }
   }
-}
-
-GoogleMap.prototype.getSaferDistricts = function() {
-  // google.maps.geometry.poly.containsLocation(e.latLng, bermudaTriangle);
 }
 
 function isNumber(n) {

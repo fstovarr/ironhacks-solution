@@ -5,7 +5,8 @@ var lightsButton, parametersButtons = {},
   boroughsButtons = {},
   buttonsGroup = [],
   heatMapButton;
-var googleMap, dataManager, idsDataBases, data;
+var googleMap, dataManager, idsDataBases, data, table;
+var numberDistrictsToShow = 4;
 
 // Constants
 const BOROUGHS = [
@@ -25,8 +26,32 @@ const CENTER_NY = {
   lat: 40.72592801736515,
   lng: -73.9503690946566
 }
+1
 
 $(document).ready(function() {
+  table = $('#tableActualRank');
+
+  $('#sidebarCollapse').on('click', function() {
+    //$('#sidebar').toggleClass('active');
+  });
+
+  $('#closePanelRight').on('click', function() {
+    $('#panel-right').hide(200);
+  });
+
+  $('#findSubmenu').on('click', function() {
+    $('#floatingNavbar').show(500);
+  });
+
+  $('#statsSubmenu').on('click', function() {
+    $('#floatingNavbar').hide(500);
+    $('#panel-right').show(200);
+  });
+
+  $('.components').on('click', 'li', function() {
+    $(this).addClass('active').siblings().removeClass('active');
+  });
+
   lightsButton = $('#switchModeButton').on('click', switchMode);
   let sb = $('#safetyButton');
   let ab = $('#affordabilityButton');
@@ -36,6 +61,8 @@ $(document).ready(function() {
     parametersButtons["SAFETY"] = sb[0].control.checked;
     parametersButtons["AFFORDABILITY"] = ab[0].control.checked;
     parametersButtons["DISTANCE"] = db[0].control.checked;
+
+    search(boroughsButtons, parametersButtons);
   });
 
   buttonsGroup.push(sb);
@@ -69,13 +96,8 @@ $(document).ready(function() {
         break;
     }
     buttonsGroup.push(btn);
+    // search(boroughsButtons, parametersButtons);
   });
-
-  $("#searchButton").on('click', function() {
-    //$("#mainNavbar").collapse("hide");
-    search(boroughsButtons, parametersButtons);
-  });
-
 });
 
 function initMap() {
@@ -99,7 +121,6 @@ function switchMode() {
 function showHeatMap() {
   if (!googleMap.isDataHeatmapLoaded()) {
     let d = [];
-    console.log(data);
     for (let b in data) {
       for (let x = 0; x < Math.round(data[b]['crimes'].length / 2); x++) {
         let e = new google.maps.LatLng(data[b]['crimes'][x]['latitude'], data[b]['crimes'][x]['longitude']);
@@ -146,31 +167,55 @@ function filterByWeightedParameters(d, s, a, bors) {
 
   let safeList = dataManager.getSaferDistricts(disTemp);
   let distList = googleMap.getNearestDistricts(disTemp, INIT_POINT);
+  let afforList = googleMap.getAffordableDistricts(disTemp);
 
   let finalList = [];
 
   for (let b = 0; b < safeList['result'].length; b++) {
-    let dist = (distList['result'][b]['distance'] - distList['min']) / (distList['max'] - distList['min']) * d;
-    let safe = (safeList['result'][b]['crimes'] - safeList['min']) / (safeList['max'] - safeList['min']) * s;
+    let dist = ((distList['result'][b]['distance'] - distList['min']) /
+      (distList['max'] - distList['min'])) * d;
+    let safe = ((safeList['result'][b]['crimes'] - safeList['min']) /
+      (safeList['max'] - safeList['min'])) * s;
+    let affo = ((afforList['result'][b]['low_income_units'] - afforList['min']) /
+      (afforList['max'] - afforList['min'])) * a;
 
     finalList.push({
-      value: (dist + safe),
+      value: (dist + safe + (1 - affo)),
       district: distList['result'][b],
-      crimes: safeList['result'][b]
+      crimes: safeList['result'][b],
+      affordability: afforList['result'][b]
     });
   }
-
-  console.log(finalList);
 
   finalList.sort(function(a, b) {
     return a['value'] - b['value'];
   });
 
-  for (let x = 0; x < 1; x++) {
-    let dist1 = dataManager.findDistrictById(data, finalList[x]['district']['id'],
-      finalList[x]['district']['boroughId']);
+  let districtsToShow = [];
 
-    console.log(dist1);
+  console.log(finalList);
+
+  let lastIndex = 0;
+
+  for (let x = 0; x < numberDistrictsToShow; x++) {
+    let br = false;
+
+    if (lastIndex + 1 >= finalList.length) {
+      break;
+    }
+
+    while (finalList[lastIndex]['district']['id'] % 100 > 25) {
+      if (lastIndex + 1 >= finalList.length) {
+        br = true;
+        break;
+      }
+      lastIndex++;
+    }
+
+    if (br) break;
+
+    let dist1 = dataManager.findDistrictById(data, finalList[lastIndex]['district']['id'],
+      finalList[lastIndex]['district']['boroughId']);
 
     if (x == 0) {
       bb = dist1['geometry']['boundbox'];
@@ -178,10 +223,19 @@ function filterByWeightedParameters(d, s, a, bors) {
       bb.union(dist1['geometry']['boundbox']);
     }
 
-    let name = dataManager.getBoroughName(distList['result'][x]['boroughId']);
-    googleMap.drawDistrict(dist1['geometry']['coordinates'], name, dist1['geometry']['middle']);
-    googleMap.drawMarker(dist1['geometry']['middle']);
+    for (let hou of dist1['housing']) {
+      googleMap.drawMarker(hou['lat_lng'], 'circle');
+    }
+
+    districtsToShow.push(dist1);
+    lastIndex++;
   }
+
+  table.bootstrapTable({
+    data: districtsToShow
+  });
+
+  googleMap.drawDistricts(districtsToShow, name, 'district');
 
   let center = bb.getCenter();
 
@@ -204,7 +258,7 @@ function filterByWeightedParameters(d, s, a, bors) {
   //rect.setBounds(dd);
   //rect.setMap(googleMap.map);
 
-  googleMap.drawMarker(dd.getCenter());
+  //googleMap.drawMarker(dd.getCenter());
   googleMap.fitBounds(dd);
 }
 
@@ -226,7 +280,8 @@ function search(boroughs, parameters) {
     a = 1;
   }
 
-  filterByWeightedParameters(d, s, a, boroughs);
+  if (d != 0 || s != 0 || a != 00)
+    filterByWeightedParameters(d, s, a, boroughs);
 }
 
 function drawHousings() {

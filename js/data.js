@@ -69,6 +69,7 @@ function DataManager() {
     // Organize JSON into boroughs
     for (let x in f) {
       let bId = dataM.getBoroughName(f[x]['properties']['BoroCD']);
+      f[x]['id'] = f[x]['properties']['BoroCD'] % 100;
 
       if (bId != null) {
         let cor = f[x]['geometry']['coordinates'];
@@ -77,17 +78,16 @@ function DataManager() {
         for (let y = 0; y < cor.length; y++) {
           for (let z = 0; z < cor[y].length; z++) {
             if (cor[y][z][0] != null && cor[y][z][1] != null) {
-
               if (f[x]['geometry']['type'] != "Polygon") {
                 for (let a of cor[y][z]) {
                   yz0 = parseFloat(a[0]);
                   yz1 = parseFloat(a[1]);
-                  bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+                  bb.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
                 }
               } else {
                 yz0 = parseFloat(cor[y][z][0]);
                 yz1 = parseFloat(cor[y][z][1]);
-                bb.extend(new google.maps.LatLng(parseFloat(yz0), parseFloat(yz1)));
+                bb.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
               }
               // boundsNY.extend(new google.maps.LatLng(parseFloat(yz1), parseFloat(yz0)));
             }
@@ -96,35 +96,65 @@ function DataManager() {
 
         f[x]['geometry']['boundbox'] = bb;
 
+        let cc = bb.getCenter();
+
         f[x]['geometry']['middle'] = {
-          lat: (bb['b']['b'] + bb['b']['f']) / 2,
-          lng: (bb['f']['b'] + bb['f']['f']) / 2
+          lat: cc['lat']() > 0 ? cc['lat']() : cc['lng'](),
+          lng: cc['lat']() < 0 ? cc['lat']() : cc['lng']()
         };
 
         // Calc safety
         for (let y of bor[bId]['crimes']) {
           // console.log(y['latitude'] + " - " + y['longitude']);
           y['lat_lng'] = {
-            lat: parseFloat(y['longitude']),
-            lng: parseFloat(y['latitude'])
+            lng: parseFloat(y['longitude']),
+            lat: parseFloat(y['latitude'])
           };
 
-          if (bId == "BROOKLYN" && x == 1) {
-            console.log(bb.contains(y['lat_lng']));
+          if (typeof f[x]['crimes'] === 'undefined') {
+            f[x]['crimes'] = [];
           }
 
           if (bb.contains(y['lat_lng'])) {
-            if (typeof f[x]['crimes'] === 'undefined') {
-              f[x]['crimes'] = [];
-            }
-
             f[x]['crimes'].push(y);
           }
         }
 
-        // Calc affordability
+        f[x]['number_crimes'] = f[x]['crimes'].length;
 
-        // console.log(bor);
+        // neighborhood
+        for (let y of bor[bId]['neighborhood']) {
+          // console.log(y['latitude'] + " - " + y['longitude']);
+          y['lat_lng'] = {
+            lat: parseFloat(y['the_geom']['coordinates'][1]),
+            lng: parseFloat(y['the_geom']['coordinates'][0])
+          };
+
+          if (typeof f[x]['neighborhood'] === 'undefined') {
+            f[x]['neighborhood'] = [];
+          }
+
+          if (bb.contains(y['lat_lng'])) {
+            f[x]['neighborhood'].push(y);
+          }
+        }
+
+        // Calc affordability
+        for (let y of bor[bId]['housing']) {
+          // console.log(y['latitude'] + " - " + y['longitude']);
+          y['lat_lng'] = {
+            lng: parseFloat(y['longitude']),
+            lat: parseFloat(y['latitude'])
+          };
+
+          if (typeof f[x]['housing'] === 'undefined') {
+            f[x]['housing'] = [];
+          }
+
+          if (bb.contains(y['lat_lng'])) {
+            f[x]['housing'].push(y);
+          }
+        }
 
         if (typeof bor[bId]['districts'] === 'undefined') {
           bor[bId]['districts'] = [];
@@ -143,8 +173,8 @@ function DataManager() {
   this.keys = Object.keys(URLS);
 }
 
-DataManager.prototype.findDistrictById = function(data, internalId, boroughId) {
-  let name = this.getBoroughName(boroughId);
+DataManager.prototype.findDistrictById = function(data, borocd) {
+  let name = this.getBoroughName(borocd);
 
   if (name == null) {
     console.log("Error");
@@ -152,7 +182,7 @@ DataManager.prototype.findDistrictById = function(data, internalId, boroughId) {
   }
 
   for (let x = 0; x < data[name]['districts'].length; x++) {
-    if (data[name]['districts'][x]['id'] == internalId) {
+    if (data[name]['districts'][x]['properties']['BoroCD'] == borocd) {
       return data[name]['districts'][x];
     }
   }
@@ -189,16 +219,11 @@ DataManager.prototype.getSaferDistricts = function(districts) {
 
       let a = {
         crimes: c,
-        id: y['id'],
-        boroughId: y['properties']['BoroCD']
+        id: y['properties']['BoroCD']
       }
       r.push(a);
     }
   }
-
-  r.sort(function(a, b) {
-    return a['crimes'] - b['crimes'];
-  });
 
   return {
     result: r,
