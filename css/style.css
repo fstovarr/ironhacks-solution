@@ -429,9 +429,17 @@ a.article, a.article:hover {
   background: rgba(33, 41, 46, 0.1);
 }
 
+.panel-side p {
+  color: #bbbbbb !important;
+}
+
+ #tableActualRank thead tr th {
+   color: white;
+ }
+
 .panel-side h1, .panel-bottom h1 {
   text-transform: none;
-  color: #C5CFD5;
+  color: #E8BF4E;
 }
 
 .panel-side h1 {
@@ -442,13 +450,13 @@ a.article, a.article:hover {
   margin: 25px 0px 5px;
   font-size: 16px;
   font-family: "function_probold";
-  color: #C5CFD5;
+  color: #3C8E6D;
 }
 
 .panel-side h3, .panel-bottom h3 {
   margin: 5px 0px 2px 0px;
   font-size: 13px;
-  color: #485F71;
+  color: #D3C684;
 }
 
 .sub-panel {
@@ -853,6 +861,10 @@ a.article, a.article:hover {
 
 .expedition-select-arrow, .expedition-select-text {
   display: table-cell;
+}
+
+.thead-dark {
+  background-color: #3C8E6D;
 }
 
 .expedition-select-text {

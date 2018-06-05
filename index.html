@@ -45,7 +45,7 @@
         </li>
 
         <li>
-          <a href="#"><i class="fa fa-link"></i>Advanced</a>
+          <a href="#" id="downloadSubmenu"><i class="fa fa-link"></i>Download</a>
         </li>
       </ul>
 
@@ -149,12 +149,13 @@
             </section>
 
             <section class="expedition-list">
-              <table id="tableActualRank" data-height="460">
-                <thead>
+              <table id="tableActualRank" data-height="460" data-sort-name="affordability crimes distance" class="table-striped table table-dark">
+                <thead class="thead-dark">
                   <tr>
                     <th data-field="id">District ID</th>
-                    <th data-field="low_income_units">Low income units</th>
-                    <th data-field="number_crimes">Crimes</th>
+                    <th data-field="borough">Borough name</th>
+                    <th data-field="affordability">Low income units</th>
+                    <th data-field="crimes">Crimes</th>
                     <th data-field="distance">Distance</th>
                   </tr>
                 </thead>
@@ -166,16 +167,16 @@
     </div>
   </div>
 
-
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.js"></script>
+  <script type="text/javascript" src="js/utils.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
   <script type="text/javascript" src="js/map.js"></script>
   <script type="text/javascript" src="js/data.js"></script>
-  <script type="text/javascript" src="js/utils.js"></script>
   <script type="text/javascript" src="js/urlformer.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMuOraxfLI37XYVc-6VH6GrOTeouCZex4&libraries=visualization,geometry&callback=initMap"></script>
 </body>

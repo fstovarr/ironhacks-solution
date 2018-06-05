@@ -466,25 +466,18 @@ GoogleMap.prototype.showMap = function(listenerCenter, listenerHeatmap) {
 
   // When the user clicks, set 'isColorful', changing the color of the letters.
   this.map.data.addListener('click', function(event) {
-    event.feature.setProperty('isColorful', true);
-  });
-
-  // When the user hovers, tempt them to click by outlining the letters.
-  // Call revertStyle() to remove all overrides. This will use the style rules
-  // defined in the function passed to setStyle()
-  this.map.data.addListener('mouseover', function(event) {
-    this.map.data.revertStyle();
     for (let v of addedShapes) {
       if (v.getProperty('districtId') == event.feature.getProperty('districtId')) {
-        this.map.data.overrideStyle(v, {
-          strokeWeight: 8
-        });
+        if (!v.getProperty('isColorful')) {
+          this.map.data.overrideStyle(v, {
+            strokeWeight: 8
+          });
+        } else {
+          this.map.data.revertStyle(v);
+        }
+        v.setProperty('isColorful', !v.getProperty('isColorful'));
       }
     }
-  });
-
-  this.map.data.addListener('mouseout', function(event) {
-    this.map.data.revertStyle();
   });
 }
 
@@ -522,18 +515,18 @@ GoogleMap.prototype.drawDistrictsInBorough = function(borough, name, show) {
   if (show) {
     this.drawDistricts(borough['districts']);
 
-
     this.map.data.setStyle(function(feature) {
       let color = new Utils().getRandomColors(5, feature.getProperty('boroughId'))[BOROUGHS.indexOf(feature.getProperty('boroughId'))];
-      console.log(color);
+      let strokeWeight = 2;
+
       if (feature.getProperty('isColorful')) {
-        color = feature.getProperty('color');
+        strokeWeight = 3;
       }
 
       return /** @type {google.maps.Data.StyleOptions} */ ({
         fillColor: color,
         strokeColor: color,
-        strokeWeight: 2
+        strokeWeight: strokeWeight
       });
     });
 
